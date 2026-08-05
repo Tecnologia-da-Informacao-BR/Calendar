@@ -15,7 +15,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 @Configuration
 public class SecurityConfig {
-    @Value("${api.password.pepper}")
+    @Value("${secret.world.pepper}")
     private String pepper;
 
     @Bean
