@@ -13,7 +13,7 @@ import java.util.Optional;
 
 @Component
 public class TokenConfig {
-    @Value("security.token")
+    @Value("secret.token")
     public String secret;
 
     public String generateToken(User user){
