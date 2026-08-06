@@ -25,6 +25,7 @@ public abstract class BaseEntity {
     @Column(name = "deleted_at")
     private LocalDate deletedAt = null;
 
+    @Column(name = "active_status")
     private boolean active = true;
 
     @PrePersist
