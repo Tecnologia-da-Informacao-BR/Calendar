@@ -1,34 +1,45 @@
 package br.com.calendar.common;
 
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
-import jakarta.persistence.Column;
-import jakarta.persistence.Id;
-import jakarta.persistence.MappedSuperclass;
-import jakarta.persistence.PrePersist;
-import lombok.Data;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.Instant;
+import java.time.LocalDate;
 
-@Data
 @MappedSuperclass
+@Getter
+@Setter
 public abstract class BaseEntity {
 
     @Id
-    private String id;
+    private String id = NanoIdUtils.randomNanoId();
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", updatable = false)
     private Instant createdAt;
 
     @Column(name = "updated_at")
     private Instant updatedAt;
 
+    @Column(name = "deleted_at")
+    private LocalDate deletedAt = null;
+
+    private boolean active = true;
+
     @PrePersist
     protected void onCreate() {
-        if (this.id == null) {
-            this.id = NanoIdUtils.randomNanoId();
-        }
         this.createdAt = Instant.now();
         this.updatedAt = Instant.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = Instant.now();
+
+        if(!this.active){
+            this.deletedAt = LocalDate.now();
+        }
     }
 
 }
