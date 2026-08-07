@@ -5,6 +5,7 @@ import br.com.calendar.user.dto.ConfirmEmailDTO;
 import br.com.calendar.user.dto.OtpResponseDTO;
 import br.com.calendar.user.dto.UpdateUserDTO;
 import br.com.calendar.user.dto.UserResponseDTO;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,30 +30,35 @@ public class UserController {
         this.userService = userService;
     }
 
+    @Operation(summary = "Get user by ID")
     @GetMapping("/{id}")
     public ResponseEntity<UserResponseDTO> getUserByID(@PathVariable String id) {
         checkOwnership(id);
         return ResponseEntity.ok(userService.getUserByID(id));
     }
 
+    @Operation(summary = "Update user")
     @PatchMapping("/{id}")
     public ResponseEntity<UserResponseDTO> updateUser(@PathVariable String id, @Valid @RequestBody UpdateUserDTO dto) {
         checkOwnership(id);
         return ResponseEntity.ok(userService.updateUser(id, dto));
     }
 
+    @Operation(summary = "Generate email confirmation OTP")
     @PostMapping("/{id}/otp")
     public ResponseEntity<OtpResponseDTO> generateOtp(@PathVariable String id) {
         checkOwnership(id);
         return ResponseEntity.ok(userService.generateEmailConfirmationOtp(id));
     }
 
+    @Operation(summary = "Confirm user email")
     @PostMapping("/{id}/confirm-email")
     public ResponseEntity<UserResponseDTO> confirmEmail(@PathVariable String id, @Valid @RequestBody ConfirmEmailDTO dto) {
         checkOwnership(id);
         return ResponseEntity.ok(userService.confirmEmail(id, dto));
     }
 
+    @Operation(summary = "Change user password")
     @PatchMapping("/{id}/password")
     public ResponseEntity<Void> changePassword(@PathVariable String id, @Valid @RequestBody ChangePasswordDTO dto) {
         checkOwnership(id);
