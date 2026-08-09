@@ -23,7 +23,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        String[] swaggerPaths = {"/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui/index.html"};
+        String[] swaggerPaths = {"/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui/index.html","/health"};
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
@@ -34,7 +34,6 @@ public class SecurityConfig {
                                 response.sendError(401, "Unauthorized")))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/auth/login", "/auth/signup", "/auth/forgot-password").permitAll()
-                        .requestMatchers("/health").permitAll()
                         .requestMatchers(swaggerPaths).permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

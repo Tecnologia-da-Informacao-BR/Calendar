@@ -13,13 +13,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestController
+@RequestMapping("/auth")
 public class AuthController {
 
     private final AuthService authService;
@@ -29,19 +27,19 @@ public class AuthController {
     }
 
     @Operation(summary = "Register user")
-    @PostMapping("/auth/signup")
+    @PostMapping("/signup")
     public ResponseEntity<AuthResponse> signup(@Valid @RequestBody SignupRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.signup(request));
     }
 
     @Operation(summary = "Authenticate user")
-    @PostMapping("/auth/login")
+    @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
     }
 
     @Operation(summary = "Request password reset")
-    @PostMapping("/auth/forgot-password")
+    @PostMapping("/forgot-password")
     public ResponseEntity<MessageResponse> requestPasswordReset(@Valid @RequestBody ForgotPasswordRequest request) {
         return ResponseEntity.ok(authService.requestPasswordReset(request));
     }
@@ -56,7 +54,7 @@ public class AuthController {
         return ResponseEntity.ok(authService.me(userId));
     }
 
-    @PostMapping("/auth/logout")
+    @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletRequest request) {
         String header = request.getHeader("Authorization");
         String token = null;
