@@ -4,7 +4,7 @@
 # ==========================================================
 
 # ---- Etapa 1: build ----
-FROM node:22-alpine AS build
+FROM node:26-alpine AS build
 WORKDIR /app
 
 COPY package.json package-lock.json ./
@@ -14,14 +14,14 @@ COPY . .
 RUN npm run build
 
 # ---- Etapa 2: dependências apenas de produção ----
-FROM node:22-alpine AS prod-deps
+FROM node:26-alpine AS prod-deps
 WORKDIR /app
 
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
 # ---- Etapa 3: runtime ----
-FROM node:22-alpine AS runtime
+FROM node:26-alpine AS runtime
 WORKDIR /app
 
 RUN addgroup -S angular && adduser -S angular -G angular
