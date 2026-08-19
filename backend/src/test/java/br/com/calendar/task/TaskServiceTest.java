@@ -2,6 +2,7 @@ package br.com.calendar.task;
 
 import br.com.calendar.common.exception.CategoryNotFoundException;
 import br.com.calendar.common.exception.GlobalExceptionHandler;
+import br.com.calendar.common.exception.InvalidTaskTimeRangeException;
 import br.com.calendar.common.exception.UserNotFoundException;
 import br.com.calendar.category.Category;
 import br.com.calendar.category.CategoryRepository;
@@ -122,7 +123,7 @@ class TaskServiceTest {
                 "pending", now, now.minusSeconds(3600),
                 null, null, null, false, TaskPriority.LOW);
 
-        assertThrows(GlobalExceptionHandler.InvalidTaskTimeRangeException.class,
+        assertThrows(InvalidTaskTimeRangeException.class,
                 () -> taskService.create(request, USER_ID));
     }
 
