@@ -1,10 +1,12 @@
-package br.com.calendar.task;
+package br.com.calendar.task.entity;
 
 import br.com.calendar.common.BaseEntity;
 import br.com.calendar.category.Category;
 import br.com.calendar.user.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -58,4 +60,7 @@ public class Task extends BaseEntity {
 
     @Column(name = "all_day")
     private Boolean allDay;
+
+    @Enumerated(EnumType.STRING)
+    private TaskPriority priority;
 }

@@ -1,6 +1,6 @@
-package br.com.calendar.task.repository;
+package br.com.calendar.task;
 
-import br.com.calendar.task.Task;
+import br.com.calendar.task.entity.Task;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
