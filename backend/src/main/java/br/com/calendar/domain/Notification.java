@@ -1,6 +1,7 @@
 package br.com.calendar.domain;
 
 import br.com.calendar.common.BaseEntity;
+import br.com.calendar.task.entity.Task;
 import br.com.calendar.user.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
