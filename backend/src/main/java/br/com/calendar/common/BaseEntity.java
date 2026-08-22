@@ -5,6 +5,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import lombok.*;
 
 import java.time.Instant;
@@ -31,6 +32,11 @@ public abstract class BaseEntity {
             this.id = NanoIdUtils.randomNanoId();
         }
         this.createdAt = Instant.now();
+        this.updatedAt = Instant.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
         this.updatedAt = Instant.now();
     }
 }

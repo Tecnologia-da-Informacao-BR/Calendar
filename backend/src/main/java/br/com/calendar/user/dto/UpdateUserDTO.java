@@ -6,6 +6,6 @@ public record UpdateUserDTO(
 
         String name,
 
-        @Email(message = "Email invalido")
+        @Email(message = "Email must be a valid address")
         String email){
 }

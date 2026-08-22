@@ -19,8 +19,8 @@ import lombok.ToString;
 import java.time.Instant;
 
 /**
- * Não estende BaseEntity: o id é identity (integer) em vez de nanoid,
- * e a tabela não tem updated_at.
+ * Does not extend BaseEntity: the id is an identity (integer) instead of a
+ * nanoid, and the table has no updated_at.
  */
 @Getter
 @Setter

@@ -29,6 +29,7 @@ public class User extends BaseEntity {
 
     private String avatar;
 
+    // Used exclusively by the forgot-password flow (see AuthService).
     @ToString.Exclude
     @Column(length = 8)
     private String otp;

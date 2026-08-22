@@ -2,12 +2,12 @@ name: CI - Backend
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, development]
     paths:
       - "backend/**"
       - ".github/workflows/ci-backend.yml"
   pull_request:
-    branches: [main, develop]
+    branches: [main, development]
     paths:
       - "backend/**"
       - ".github/workflows/ci-backend.yml"
@@ -21,9 +21,7 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      # Ephemeral database: created when the job starts and destroyed when it
-      # ends, with no port exposed outside the runner. These are not the
-      # project's credentials — the real ones never enter the repository.
+      # Temporary database created when the job starts and destroyed when it ends.
       postgres:
         image: postgres:16-alpine
         env:
@@ -32,8 +30,7 @@ jobs:
           POSTGRES_PASSWORD: ci
         ports:
           - 5432:5432
-        # Without the health check the job starts before Postgres accepts
-        # connections and the tests fail intermittently.
+        # Wait for PostgreSQL to accept connections before running the tests.
         options: >-
           --health-cmd pg_isready
           --health-interval 5s
@@ -42,7 +39,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
 
       - name: Configure JDK 21
         uses: actions/setup-java@v5
@@ -54,16 +51,16 @@ jobs:
       - name: Grant execute permission to mvnw
         run: chmod +x mvnw
 
-      - name: Build and tests
+      - name: Build and Test
         env:
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/calendar_ci
           SPRING_DATASOURCE_USERNAME: ci
           SPRING_DATASOURCE_PASSWORD: ci
         run: ./mvnw -B clean verify
 
-      - name: Publish test reports
+      - name: Publish Test Reports
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: backend-surefire-reports
           path: backend/target/surefire-reports

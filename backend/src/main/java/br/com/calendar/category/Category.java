@@ -29,4 +29,7 @@ public class Category extends BaseEntity {
 
     @Column(length = 6)
     private String color;
+
+    @Column(length = 255)
+    private String icon;
 }

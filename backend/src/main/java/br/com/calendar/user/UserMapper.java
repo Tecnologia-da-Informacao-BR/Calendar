@@ -22,7 +22,7 @@ public class UserMapper {
         User user = new User();
         user.setName(dto.name());
         user.setEmail(dto.email());
-        user.setPassword(dto.password()); // ainda sem criptografar, isso é feito no service
+        user.setPassword(dto.password()); // not yet encoded — the service does that
         return user;
     }
 }

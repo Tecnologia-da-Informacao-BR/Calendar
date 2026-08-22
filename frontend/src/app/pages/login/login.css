@@ -1,0 +1,46 @@
+:host {
+  display: block;
+  min-height: 100dvh;
+  color: #191d2d;
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+}
+
+.login-page {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #f8f8fe;
+}
+
+.login-card {
+  width: min(100%, 360px);
+  display: grid;
+  gap: 12px;
+  padding: 32px;
+  border: 1px solid #d3d9e6;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.brand-name,
+.login-copy {
+  margin: 0;
+  color: #667085;
+  font-size: 13px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.1;
+  font-weight: 700;
+}
+
+a {
+  width: fit-content;
+  color: #075fc2;
+  font-weight: 500;
+  text-decoration: none;
+}

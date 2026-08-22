@@ -2,12 +2,12 @@ name: CI - Frontend
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, development]
     paths:
       - "frontend/**"
       - ".github/workflows/ci-frontend.yml"
   pull_request:
-    branches: [main, develop]
+    branches: [main, development]
     paths:
       - "frontend/**"
       - ".github/workflows/ci-frontend.yml"
@@ -19,12 +19,13 @@ defaults:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
 
       - name: Configure Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: npm
@@ -33,13 +34,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # There is no .eslintrc in the project yet — using prettier as a formatting check.
-      # If ESLint is added later, replace this step with `npx eslint .`.
-      - name: Check formatting (prettier)
+      # Checks the code formatting.
+      # If ESLint is added in the future, it can be run as a separate step.
+      - name: Check Formatting (Prettier)
         run: npx prettier --check "src/**/*.{ts,html,css}"
 
-      - name: Unit tests
+      - name: Unit Tests
         run: npm test
 
-      - name: Production build (SSR)
+      - name: Production Build (SSR)
         run: npm run build

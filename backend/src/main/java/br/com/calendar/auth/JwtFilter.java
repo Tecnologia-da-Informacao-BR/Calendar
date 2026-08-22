@@ -18,9 +18,11 @@ public class JwtFilter extends OncePerRequestFilter {
     private static final String BEARER_PREFIX = "Bearer ";
 
     private final JwtUtil jwtUtil;
+    private final TokenBlacklist tokenBlacklist;
 
-    public JwtFilter(JwtUtil jwtUtil) {
+    public JwtFilter(JwtUtil jwtUtil, TokenBlacklist tokenBlacklist) {
         this.jwtUtil = jwtUtil;
+        this.tokenBlacklist = tokenBlacklist;
     }
 
     @Override
@@ -32,7 +34,8 @@ public class JwtFilter extends OncePerRequestFilter {
             String token = header.substring(BEARER_PREFIX.length());
             try {
                 String userId = jwtUtil.extractUserId(token);
-                if (userId != null && !jwtUtil.isExpired(token)
+                if (userId != null && jwtUtil.getScope(token) == null
+                        && !jwtUtil.isExpired(token) && !tokenBlacklist.isRevoked(token)
                         && SecurityContextHolder.getContext().getAuthentication() == null) {
 
                     var userDetails = org.springframework.security.core.userdetails.User

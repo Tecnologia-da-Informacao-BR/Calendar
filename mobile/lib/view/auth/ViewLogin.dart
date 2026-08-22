@@ -1,3 +1,9 @@
+import 'package:calendar/view/auth/ViewForgotPassword.dart';
+import 'package:calendar/view/auth/ViewSignup.dart';
+import 'package:calendar/widget/WidgetBody.dart';
+import 'package:calendar/widget/WidgetButton.dart';
+import 'package:calendar/widget/WidgetInput.dart';
+import 'package:calendar/widget/WidgetOAuth.dart';
 import 'package:flutter/material.dart';
 
 class ViewLogin extends StatefulWidget {
@@ -9,138 +15,64 @@ class ViewLogin extends StatefulWidget {
 class _ViewLogin extends State<ViewLogin> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return WidgetBody(
+      children: [
+        Text(
+          "Bem-vindo de volta",
+          style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+        ),
+        Text(
+          "Por favor, insira seus dados para entrar.",
+          style: TextStyle(fontSize: 14),
+        ),
+        SizedBox(height: 50),
 
-        children: [
-          Text(
-            "Bem-vindo de volta",
-            style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-          ),
-          Text(
-            "Por favor, insira seus dados para entrar.",
-            style: TextStyle(fontSize: 14),
-          ),
-          SizedBox(height: 50),
-          Text("Endereço de E-mail", style: TextStyle(fontSize: 14)),
-          SizedBox(height: 5),
-          TextFormField(
-            decoration: InputDecoration(
-              prefixIcon: Icon(Icons.mail_outline),
-              labelText: "nome@empresa.com",
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular((10)),
+        WidgetInput(label: "Email"),
+
+        Column(
+          children: [
+            WidgetInput(
+              label: "Senha",
+              password: true,
+              icon: Icons.lock_outline,
+            ),
+
+            WidgetButton(text: "Entrar"),
+
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ViewForgotPassword()),
+                );
+              },
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [Text("Esqueceu a senha?")],
               ),
             ),
-          ),
-          SizedBox(height: 10),
-          Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text("Senha", style: TextStyle(fontSize: 14)),
-                  TextButton(
-                    onPressed: () {},
-                    child: Text(
-                      "Esqueceu a senha?",
-                      style: TextStyle(color: Colors.blue),
-                    ),
-                  ),
-                ],
-              ),
-              TextFormField(
-                obscureText: true,
-                decoration: InputDecoration(
-                  hintText: "*******",
-                  prefixIcon: Icon(Icons.lock_outline),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular((10)),
-                  ),
-                ),
-              ),
-              SizedBox(height: 20),
-              SizedBox(
-                height: 57,
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(06),
-                    ),
-                  ),
-                  onPressed: () {},
-                  child: Text(
-                    "Entrar",
-                    style: TextStyle(color: Colors.white, fontSize: 20),
-                  ),
-                ),
-              ),
-              SizedBox(height: 45),
-              Row(
-                children: [
-                  Expanded(child: Divider()),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 12),
-                    child: Text(
-                      "OU ENTRAR COM",
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  Expanded(child: Divider()),
-                ],
-              ),
-              SizedBox(height: 30),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () {},
-                      icon: Icon(Icons.g_mobiledata),
-                      label: Text("Google"),
-                      style: OutlinedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                  ),
 
-                  SizedBox(height: 10, width: 12),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () {},
-                      icon: Icon(Icons.code),
-                      label: Text("Github"),
-                      style: OutlinedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 25),
-              Row(
+            SizedBox(height:30),
+            
+            WidgetOAuth("OU ENTRAR COM"),
+
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ViewSignup()),
+                );
+              },
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text("Não tem uma conta?"),
-                  TextButton(onPressed: () {}, child: Text("Criar Conta")),
-                ],
+                children: [Text("Não tem uma conta? Criar Conta")],
               ),
-              SizedBox(height: 15),
-              Text("© 2026 Project A. Gestão profissional de horários."),
-            ],
-          ),
-        ],
-      ),
+            ),
+            SizedBox(height: 15),
+            Text("© 2026 Project A. Gestão profissional de horários."),
+          ],
+        ),
+      ],
     );
   }
 }

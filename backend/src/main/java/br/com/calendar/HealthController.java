@@ -7,8 +7,8 @@ import java.time.Instant;
 import java.util.Map;
 
 /**
- * Endpoint simples só para validar que o backend está de pé.
- * Opcional — remova/ajuste como quiser quando tiver seus controllers reais.
+ * Simple endpoint to confirm the backend is up.
+ * Optional — remove/adjust it as needed once real controllers exist.
  */
 @RestController
 public class HealthController {

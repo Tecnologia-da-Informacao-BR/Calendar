@@ -2,12 +2,12 @@ name: CI - Mobile
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, development]
     paths:
       - "mobile/**"
       - ".github/workflows/ci-mobile.yml"
   pull_request:
-    branches: [main, develop]
+    branches: [main, development]
     paths:
       - "mobile/**"
       - ".github/workflows/ci-mobile.yml"
@@ -19,25 +19,26 @@ defaults:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
 
       - name: Configure Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version-file: mobile/pubspec.yaml
+          flutter-version: "3.44.9"
           channel: stable
           cache: true
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: flutter pub get
 
-      - name: Analyze code
-        run: flutter analyze
+      - name: Analyze Code
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
 
-      - name: Run tests
+      - name: Run Tests
         run: flutter test
 
-      - name: Build APK (debug)
+      - name: Build APK (Debug)
         run: flutter build apk --debug

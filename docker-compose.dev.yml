@@ -12,10 +12,15 @@ services:
     ports:
       - "${BACKEND_PORT:-8080}:8080"
     environment:
-      SPRING_PROFILES_ACTIVE: dev
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.PostgreSQLDialect
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-calendar}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-calendar}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-calendar}
+      SECRET_PASSWORD_PEPPER: ${SECRET_PASSWORD_PEPPER:-dev-only-pepper-change-in-production}
+      JWT_SECRET: ${JWT_SECRET:-dev-only-secret-change-in-production-0123456789abcdef}
+      # Without real Gmail credentials, this is the only way to see a
+      # confirmation link / reset code locally.
+      LOGGING_LEVEL_BR_COM_CALENDAR_EMAIL: DEBUG
     volumes:
       - ./backend/src:/app/src
       - backend-maven-cache:/root/.m2
@@ -60,8 +65,29 @@ services:
     networks:
       - calendar-net
 
+  test-db:
+    image: postgres:16-alpine
+    container_name: calendar-db-test
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-calendar}
+      POSTGRES_USER: ${POSTGRES_USER:-calendar}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-calendar}
+    ports:
+      - "5433:5432"
+    volumes:
+      - calendar-db-test-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-calendar}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - calendar-net
+
 volumes:
   calendar-db-dev-data:
+  calendar-db-test-data:
   backend-maven-cache:
   frontend-node-modules:
 

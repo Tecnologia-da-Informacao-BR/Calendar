@@ -2,12 +2,11 @@ package br.com.calendar.user;
 
 import br.com.calendar.configuration.ConfigurationService;
 import br.com.calendar.user.dto.ChangePasswordDTO;
-import br.com.calendar.user.dto.ConfirmEmailDTO;
 import br.com.calendar.user.dto.CreateUserDTO;
 import br.com.calendar.user.dto.OtpResponseDTO;
 import br.com.calendar.user.dto.UpdateUserDTO;
 import br.com.calendar.user.dto.UserResponseDTO;
-import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -17,7 +16,6 @@ import java.security.SecureRandom;
 import java.time.LocalDateTime;
 
 @Service
-@RequiredArgsConstructor
 public class UserService {
 
     private static final long OTP_VALIDITY_MINUTES = 15;
@@ -26,6 +24,14 @@ public class UserService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final ConfigurationService configurationService;
+
+    public UserService(UserRepository userRepository, UserMapper userMapper,
+                        PasswordEncoder passwordEncoder, ConfigurationService configurationService) {
+        this.userRepository = userRepository;
+        this.userMapper = userMapper;
+        this.passwordEncoder = passwordEncoder;
+        this.configurationService = configurationService;
+    }
 
     public UserResponseDTO createUser(CreateUserDTO dto) {
         if (userRepository.findByEmail(dto.email()).isPresent()) {
@@ -36,7 +42,12 @@ public class UserService {
         user.setEmailConfirmed(false);
         user.setPassword(passwordEncoder.encode(dto.password()));
 
-        User savedUser = userRepository.save(user);
+        // The check above is best-effort: two concurrent signups for the
+        // same email could both pass it before either INSERT commits. The
+        // unique constraint on users.email (V3) is what actually prevents
+        // the duplicate; this just turns that race into the same clean
+        // error instead of a raw constraint-violation failure.
+        User savedUser = saveWithUniqueEmail(user, "Unable to complete registration");
         configurationService.createDefaultConfiguration(savedUser.getId());
 
         return userMapper.toResponse(savedUser);
@@ -64,12 +75,12 @@ public class UserService {
             user.setEmail(dto.email());
         }
 
-        User savedUser = userRepository.save(user);
+        User savedUser = saveWithUniqueEmail(user, "Email is already in use");
 
         return userMapper.toResponse(savedUser);
     }
 
-    public OtpResponseDTO generateEmailConfirmationOtp(String id) {
+    public OtpResponseDTO generatePasswordResetOtp(String id) {
         User user = findUserOrThrow(id);
 
         String otp = generateOtp();
@@ -77,32 +88,16 @@ public class UserService {
         user.setOtpExpiration(LocalDateTime.now().plusMinutes(OTP_VALIDITY_MINUTES));
         userRepository.save(user);
 
-        // TODO: send this via email once an email service exists. Returning it
-        // directly for now so the confirmation flow can be tested manually.
+        // The caller (AuthService) is responsible for emailing this code.
         return new OtpResponseDTO(otp);
     }
 
-    public UserResponseDTO confirmEmail(String id, ConfirmEmailDTO dto) {
+    // The caller (AuthService) is responsible for identifying and authorizing
+    // which user this is via the email-confirmation JWT before calling this.
+    public void markEmailConfirmed(String id) {
         User user = findUserOrThrow(id);
-
-        if (user.getOtp() == null || user.getOtpExpiration() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No confirmation code was requested");
-        }
-
-        if (user.getOtpExpiration().isBefore(LocalDateTime.now())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Confirmation code expired");
-        }
-
-        if (!user.getOtp().equals(dto.otp())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid confirmation code");
-        }
-
         user.setEmailConfirmed(true);
-        user.setOtp(null);
-        user.setOtpExpiration(null);
-
-        User savedUser = userRepository.save(user);
-        return userMapper.toResponse(savedUser);
+        userRepository.save(user);
     }
 
     public void changePassword(String id, ChangePasswordDTO dto) {
@@ -114,6 +109,22 @@ public class UserService {
 
         user.setPassword(passwordEncoder.encode(dto.newPassword()));
         userRepository.save(user);
+    }
+
+    // The caller (AuthService) is responsible for identifying and authorizing
+    // which user this is via the password-reset JWT before calling this.
+    public void resetPassword(String id, String newPassword) {
+        User user = findUserOrThrow(id);
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
+
+    private User saveWithUniqueEmail(User user, String duplicateEmailMessage) {
+        try {
+            return userRepository.save(user);
+        } catch (DataIntegrityViolationException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, duplicateEmailMessage, e);
+        }
     }
 
     private User findUserOrThrow(String id) {

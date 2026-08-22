@@ -1,6 +1,6 @@
 package br.com.calendar.user.dto;
 
-// Temporary: exposes the OTP directly in the response until email sending is implemented.
-// Once there's an email service, this endpoint should stop returning the code and just confirm it was sent.
+// Internal transfer object between UserService and AuthService, which emails
+// the code — never returned directly by an HTTP endpoint.
 public record OtpResponseDTO(String otp) {
 }
