@@ -15,7 +15,7 @@
     <!-- Removido o 17 duplicado, mantendo apenas o 21 -->
     <maven.compiler.release>21</maven.compiler.release>
     <!-- Versão do JavaFX -->
-    <javafx.version>21.0.2</javafx.version>
+    <javafx.version>26.0.2</javafx.version>
   </properties>
 
   <dependencyManagement>
