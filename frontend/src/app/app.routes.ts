@@ -12,9 +12,14 @@ export const routes: Routes = [
     pathMatch: 'full',
   },
   {
-    path: 'login',
+    path: 'entrar',
     loadComponent: () => import('./pages/login/login').then((m) => m.Login),
     title: 'Entrar',
+  },
+  {
+    path: 'login',
+    redirectTo: 'entrar',
+    pathMatch: 'full',
   },
   {
     path: 'resetar-senha',
@@ -25,6 +30,10 @@ export const routes: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    redirectTo: 'signup',
+    redirectTo: 'entrar',
+  },
+  {
+    path: '**',
+    redirectTo: 'entrar',
   },
 ];

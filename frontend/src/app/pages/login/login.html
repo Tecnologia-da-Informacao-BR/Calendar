@@ -1,8 +1,224 @@
 <main class="login-page" aria-labelledby="login-title">
-  <section class="login-card">
-    <p class="brand-name">Project A</p>
-    <h1 id="login-title">Entrar</h1>
-    <p class="login-copy">Acesse sua conta para continuar sua agenda.</p>
-    <a routerLink="/cadastro">Criar uma conta</a>
+  <section class="auth-shell">
+    <aside class="brand-panel" aria-label="Project A">
+      <div class="brand-content">
+        <div class="brand-lockup">
+          <span class="brand-icon" aria-hidden="true">
+            <svg lucideCalendar class="brand-icon-svg" aria-hidden="true"></svg>
+          </span>
+          <span class="brand-name">Project A</span>
+        </div>
+
+        <div class="brand-message">
+          <h1>Foque no que<br />mais importa.</h1>
+          <p>
+            Junte-se a milhares de profissionais que utilizam o ambiente de agendamento mais
+            intuitivo e livre de distrações.
+          </p>
+        </div>
+      </div>
+
+      <div class="focus-note" aria-label="Dica de produtividade">
+        <span class="focus-icon" aria-hidden="true">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.7"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="m12 3 1.15 4.85L18 9l-4.85 1.15L12 15l-1.15-4.85L6 9l4.85-1.15L12 3Z"></path>
+            <path d="m19 14 .55 2.45L22 17l-2.45.55L19 20l-.55-2.45L16 17l2.45-.55L19 14Z"></path>
+          </svg>
+        </span>
+        <span>
+          <strong>IMPULSO DE EFICIÊNCIA</strong>
+          <em>O menu de comandos (Ctrl+K) já está disponível.</em>
+        </span>
+      </div>
+    </aside>
+
+    <section class="form-panel" aria-label="Área de entrada">
+      <div class="form-card">
+        <header class="form-header">
+          <h2 id="login-title">Bem-vindo de volta</h2>
+          <p>Por favor, insira seus dados para entrar.</p>
+        </header>
+
+        <form class="login-form" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+          <div class="field">
+            <label for="email">Endereço de e-mail</label>
+            <div
+              class="input-wrap"
+              [class.has-error]="showError('email', 'required') || showError('email', 'email')"
+            >
+              <svg
+                class="input-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+                <path d="m3 7 9 6 9-6"></path>
+              </svg>
+              <input
+                id="email"
+                type="email"
+                formControlName="email"
+                autocomplete="email"
+                placeholder="nome@empresa.com"
+                aria-describedby="email-error"
+              />
+            </div>
+            <p
+              id="email-error"
+              class="field-message"
+              [class.is-visible]="showError('email', 'required') || showError('email', 'email')"
+              aria-live="polite"
+            >
+              {{
+                showError('email', 'required') ? 'Informe seu e-mail.' : 'Digite um e-mail válido.'
+              }}
+            </p>
+          </div>
+
+          <div class="field">
+            <div class="label-row">
+              <label for="password">Senha</label>
+              <button type="button" class="forgot-link" (click)="onForgotPassword()">
+                Esqueceu a senha?
+              </button>
+            </div>
+            <div
+              class="input-wrap"
+              [class.has-error]="
+                showError('password', 'required') || showError('password', 'minlength')
+              "
+            >
+              <svg
+                class="input-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <rect x="5" y="10" width="14" height="10" rx="2"></rect>
+                <path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v2"></path>
+              </svg>
+              <input
+                id="password"
+                [type]="passwordVisible() ? 'text' : 'password'"
+                formControlName="password"
+                autocomplete="current-password"
+                placeholder="••••••••"
+                aria-describedby="password-error"
+              />
+              <button
+                type="button"
+                class="visibility-button"
+                [attr.aria-label]="passwordVisible() ? 'Ocultar senha' : 'Mostrar senha'"
+                (click)="togglePassword()"
+              >
+                @if (passwordVisible()) {
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.7"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M3 3 21 21"></path>
+                    <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"></path>
+                    <path
+                      d="M9.9 4.2A10.5 10.5 0 0 1 12 4c5.1 0 8.5 4 9.5 6-.4.8-1.2 1.9-2.4 3M6.6 6.6C4.6 7.9 3.4 9.5 2.5 10c1 2 4.4 6 9.5 6 1 0 1.9-.2 2.7-.5"
+                    ></path>
+                  </svg>
+                } @else {
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.7"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path>
+                    <circle cx="12" cy="12" r="2.5"></circle>
+                  </svg>
+                }
+              </button>
+            </div>
+            <p
+              id="password-error"
+              class="field-message"
+              [class.is-visible]="
+                showError('password', 'required') || showError('password', 'minlength')
+              "
+              aria-live="polite"
+            >
+              {{
+                showError('password', 'required')
+                  ? 'Informe sua senha.'
+                  : 'A senha deve ter pelo menos 8 caracteres.'
+              }}
+            </p>
+          </div>
+
+          <button type="submit" class="submit-button">Entrar</button>
+        </form>
+
+        <div class="auth-divider"><span>Ou entrar com</span></div>
+        <div class="social-actions" aria-label="Opções de entrada social">
+          <button type="button" (click)="onSocialLogin('Google')">
+            <svg class="social-icon social-icon--google" aria-hidden="true" viewBox="0 0 24 24">
+              <path
+                fill="#4285F4"
+                d="M21.8 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.5a4.7 4.7 0 0 1-2 3.1v2.5h3.2c1.9-1.8 3.1-4.4 3.1-7.4Z"
+              />
+              <path
+                fill="#34A853"
+                d="M12 22c2.7 0 5-.9 6.7-2.4l-3.2-2.5c-.9.6-2 .9-3.5.9-2.7 0-5-1.8-5.8-4.3H2.9v2.6A10 10 0 0 0 12 22Z"
+              />
+              <path fill="#FBBC05" d="M6.2 13.7a6 6 0 0 1 0-3.8V7.3H2.9a10 10 0 0 0 0 9l3.3-2.6Z" />
+              <path
+                fill="#EA4335"
+                d="M12 6c1.7 0 3.2.6 4.4 1.7l3.3-3.3A10 10 0 0 0 2.9 7.3l3.3 2.6C7 7.8 9.3 6 12 6Z"
+              />
+            </svg>
+            <span>Google</span>
+          </button>
+          <button type="button" (click)="onSocialLogin('GitHub')">
+            <svg
+              class="social-icon social-icon--github"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                d="M12 2.25a9.75 9.75 0 0 0-3.08 19c.49.09.67-.21.67-.47v-1.66c-2.72.59-3.29-1.15-3.29-1.15-.44-1.12-1.08-1.42-1.08-1.42-.89-.61.07-.6.07-.6.98.07 1.5 1 1.5 1 .87 1.49 2.3 1.06 2.86.81.09-.63.34-1.06.62-1.31-2.17-.25-4.45-1.08-4.45-4.82 0-1.06.38-1.93 1-2.61-.1-.25-.43-1.24.1-2.58 0 0 .82-.26 2.68.99a9.3 9.3 0 0 1 4.9 0c1.86-1.25 2.68-.99 2.68-.99.53 1.34.2 2.33.1 2.58.62.68 1 1.55 1 2.61 0 3.75-2.28 4.57-4.46 4.82.35.3.66.88.66 1.78v2.55c0 .26.18.56.68.47A9.75 9.75 0 0 0 12 2.25Z"
+              ></path>
+            </svg>
+            <span>GitHub</span>
+          </button>
+        </div>
+
+        <p class="create-account">Não tem uma conta? <a routerLink="/cadastro">Criar Conta</a></p>
+        @if (feedback()) {
+          <p class="feedback" role="status">{{ feedback() }}</p>
+        }
+      </div>
+      <p class="page-footer">© 2026 Project A. Gestão profissional de horários.</p>
+    </section>
   </section>
 </main>
