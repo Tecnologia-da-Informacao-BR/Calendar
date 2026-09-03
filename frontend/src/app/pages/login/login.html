@@ -1,30 +1,58 @@
-<main class="login-page" aria-labelledby="login-title">
-  <section class="auth-shell">
-    <aside class="brand-panel" aria-label="Project A">
-      <div class="brand-content">
-        <div class="brand-lockup">
-          <span class="brand-icon" aria-hidden="true">
-            <svg lucideCalendar class="brand-icon-svg" aria-hidden="true"></svg>
+<main
+  class="min-h-screen bg-[#f0f2fb] p-4 sm:p-8 lg:p-10 flex items-center justify-center"
+  aria-labelledby="login-title"
+>
+  <div
+    class="login-shell w-full max-w-[1200px] min-h-[680px] lg:min-h-[748px] grid lg:grid-cols-2 overflow-hidden rounded-2xl bg-white border border-gray-200/80"
+  >
+    <aside
+      class="hidden lg:flex flex-col justify-between bg-[#0055b8] p-12 xl:p-14 text-white"
+      aria-label="Apresentação do Project A"
+    >
+      <div>
+        <div class="flex items-center gap-3">
+          <span
+            class="flex h-12 w-12 items-center justify-center rounded-xl border border-white/30 bg-white/15 shadow-lg"
+            aria-hidden="true"
+          >
+            <svg
+              class="h-6 w-6"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <rect width="18" height="18" x="3" y="4" rx="2" />
+              <path d="M3 10h18M8 2v4M16 2v4" />
+            </svg>
           </span>
-          <span class="brand-name">Project A</span>
+          <span class="text-2xl font-bold">Project A</span>
         </div>
 
-        <div class="brand-message">
-          <h1>Foque no que<br />mais importa.</h1>
-          <p>
+        <div class="mt-20 max-w-md">
+          <p class="text-5xl xl:text-[52px] font-extrabold leading-[1.15] tracking-tight">
+            Foque no que<br />mais importa.
+          </p>
+          <p class="mt-7 max-w-sm text-base leading-7 text-white/90">
             Junte-se a milhares de profissionais que utilizam o ambiente de agendamento mais
             intuitivo e livre de distrações.
           </p>
         </div>
       </div>
 
-      <div class="focus-note" aria-label="Dica de produtividade">
-        <span class="focus-icon" aria-hidden="true">
+      <div
+        class="flex max-w-[504px] items-center gap-4 rounded-2xl border border-white/25 bg-white/10 p-5"
+      >
+        <span
+          class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white text-[#0055b8]"
+          aria-hidden="true"
+        >
           <svg
+            class="h-8 w-8"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            stroke-width="1.7"
+            stroke-width="1.9"
             stroke-linecap="round"
             stroke-linejoin="round"
           >
@@ -34,48 +62,73 @@
             <path
               fill="currentColor"
               stroke="none"
-              d="M18.2 4.5 Q18.7 6.4 20.6 6.9 Q18.7 7.4 18.2 9.3 Q17.7 7.4 15.8 6.9 Q17.7 6.4 18.2 4.5 Z"
+              d="M17.9 3.7 Q18.5 6.3 21.1 6.9 Q18.5 7.5 17.9 10.1 Q17.3 7.5 14.7 6.9 Q17.3 6.3 17.9 3.7 Z"
             ></path>
             <path
               fill="currentColor"
               stroke="none"
-              d="M17.9 14.5 Q18.4 16.4 20.3 16.9 Q18.4 17.4 17.9 19.3 Q17.4 17.4 15.5 16.9 Q17.4 16.4 17.9 14.5 Z"
+              d="M18 13.9 Q18.6 16.5 21.2 17.1 Q18.6 17.7 18 20.3 Q17.4 17.7 14.8 17.1 Q17.4 16.5 18 13.9 Z"
             ></path>
           </svg>
         </span>
-        <span>
-          <strong>IMPULSO DE EFICIÊNCIA</strong>
-          <em>O menu de comandos (Ctrl+K) já está disponível.</em>
-        </span>
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[0.14em] text-white/75">
+            Impulso de eficiência
+          </p>
+          <p class="mt-1 text-sm text-white/95">O menu de comandos (Ctrl+K) já está disponível.</p>
+        </div>
       </div>
     </aside>
 
-    <section class="form-panel" aria-label="Área de entrada">
-      <div class="form-card">
-        <header class="form-header">
-          <h2 id="login-title">Bem-vindo de volta</h2>
-          <p>Por favor, insira seus dados para entrar.</p>
+    <section class="flex flex-col bg-white px-6 py-8 sm:px-12 lg:px-16 xl:px-20">
+      <div class="lg:hidden mb-12 flex items-center gap-3 text-[#111827]">
+        <span
+          class="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0055b8] text-white"
+          aria-hidden="true"
+        >
+          <svg
+            class="h-5 w-5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <rect width="18" height="18" x="3" y="4" rx="2" />
+            <path d="M3 10h18M8 2v4M16 2v4" />
+          </svg>
+        </span>
+        <span class="text-xl font-bold">Project A</span>
+      </div>
+
+      <div class="m-auto w-full max-w-[400px]">
+        <header class="mb-12">
+          <h1 id="login-title" class="text-3xl font-bold tracking-tight text-[#171923]">
+            Bem-vindo de volta
+          </h1>
+          <p class="mt-2 text-sm leading-6 text-gray-600">
+            Por favor, insira seus dados para entrar.
+          </p>
         </header>
 
-        <form class="login-form" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
-          <div class="field">
-            <label for="email">Endereço de e-mail</label>
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate class="space-y-6">
+          <div>
+            <label for="email" class="mb-2 block text-xs font-semibold text-gray-700">
+              Endereço de e-mail
+            </label>
             <div
-              class="input-wrap"
-              [class.has-error]="showError('email', 'required') || showError('email', 'email')"
+              class="field-shell flex items-center rounded-xl border bg-[#f8f9fe] px-3.5"
+              [class.field-error]="showError('email', 'required') || showError('email', 'email')"
             >
               <svg
-                class="input-icon"
-                viewBox="0 0 24 24"
+                class="h-5 w-5 shrink-0 text-gray-500"
                 fill="none"
                 stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
                 aria-hidden="true"
               >
-                <rect x="3" y="5" width="18" height="14" rx="2"></rect>
-                <path d="m3 7 9 6 9-6"></path>
+                <rect width="20" height="16" x="2" y="4" rx="2" />
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
               </svg>
               <input
                 id="email"
@@ -83,46 +136,48 @@
                 formControlName="email"
                 autocomplete="email"
                 placeholder="nome@empresa.com"
+                class="h-12 min-w-0 flex-1 bg-transparent px-3 text-sm text-gray-900 outline-none placeholder:text-gray-400"
                 aria-describedby="email-error"
+                [attr.aria-invalid]="
+                  showError('email', 'required') || showError('email', 'email')
+                "
               />
             </div>
-            <p
-              id="email-error"
-              class="field-message"
-              [class.is-visible]="showError('email', 'required') || showError('email', 'email')"
-              aria-live="polite"
-            >
-              {{
-                showError('email', 'required') ? 'Informe seu e-mail.' : 'Digite um e-mail válido.'
-              }}
-            </p>
+
+            @if (showError('email', 'required')) {
+              <p id="email-error" class="error-message">Informe seu e-mail.</p>
+            } @else if (showError('email', 'email')) {
+              <p id="email-error" class="error-message">Digite um e-mail válido.</p>
+            }
           </div>
 
-          <div class="field">
-            <div class="label-row">
-              <label for="password">Senha</label>
-              <button type="button" class="forgot-link" (click)="onForgotPassword()">
+          <div>
+            <div class="mb-2 flex items-center justify-between gap-3">
+              <label for="password" class="block text-xs font-semibold text-gray-700">Senha</label>
+              <button
+                type="button"
+                class="text-xs font-semibold text-[#0055b8] transition hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0055b8]"
+                (click)="onForgotPassword()"
+              >
                 Esqueci minha senha
               </button>
             </div>
             <div
-              class="input-wrap"
-              [class.has-error]="
+              class="field-shell flex items-center rounded-xl border bg-[#f8f9fe] px-3.5"
+              [class.field-error]="
                 showError('password', 'required') || showError('password', 'minlength')
               "
             >
               <svg
-                class="input-icon"
-                viewBox="0 0 24 24"
+                class="h-5 w-5 shrink-0 text-gray-500"
                 fill="none"
                 stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
                 aria-hidden="true"
               >
-                <rect x="5" y="10" width="14" height="10" rx="2"></rect>
-                <path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v2"></path>
+                <rect width="14" height="11" x="5" y="10" rx="2" />
+                <path d="M8 10V7a4 4 0 0 1 8 0v3" />
               </svg>
               <input
                 id="password"
@@ -130,69 +185,82 @@
                 formControlName="password"
                 autocomplete="current-password"
                 placeholder="••••••••"
+                class="h-12 min-w-0 flex-1 bg-transparent px-3 text-sm text-gray-900 outline-none placeholder:text-gray-400"
                 aria-describedby="password-error"
+                [attr.aria-invalid]="
+                  showError('password', 'required') || showError('password', 'minlength')
+                "
               />
               <button
                 type="button"
-                class="visibility-button"
-                [attr.aria-label]="passwordVisible() ? 'Ocultar senha' : 'Mostrar senha'"
+                class="rounded-md p-1 text-gray-500 hover:text-[#0055b8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0055b8]"
                 (click)="togglePassword()"
+                [attr.aria-label]="passwordVisible() ? 'Ocultar senha' : 'Mostrar senha'"
               >
-                @if (passwordVisible()) {
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.7"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                  >
-                    <path d="M3 3 21 21"></path>
-                    <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"></path>
+                <svg
+                  class="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  @if (passwordVisible()) {
                     <path
-                      d="M9.9 4.2A10.5 10.5 0 0 1 12 4c5.1 0 8.5 4 9.5 6-.4.8-1.2 1.9-2.4 3M6.6 6.6C4.6 7.9 3.4 9.5 2.5 10c1 2 4.4 6 9.5 6 1 0 1.9-.2 2.7-.5"
-                    ></path>
-                  </svg>
-                } @else {
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.7"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                  >
-                    <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path>
-                    <circle cx="12" cy="12" r="2.5"></circle>
-                  </svg>
-                }
+                      d="m3 3 18 18M10.6 10.7a2 2 0 0 0 2.7 2.7M9.9 4.2A10.9 10.9 0 0 1 12 4c5 0 9 4 10 8a13.4 13.4 0 0 1-2.1 4.2M6.6 6.6C4.3 8 2.7 10 2 12c1 4 5 8 10 8a10.8 10.8 0 0 0 4.3-.9"
+                    />
+                  } @else {
+                    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+                    <circle cx="12" cy="12" r="3" />
+                  }
+                </svg>
               </button>
             </div>
-            <p
-              id="password-error"
-              class="field-message"
-              [class.is-visible]="
-                showError('password', 'required') || showError('password', 'minlength')
-              "
-              aria-live="polite"
-            >
-              {{
-                showError('password', 'required')
-                  ? 'Informe sua senha.'
-                  : 'A senha deve ter pelo menos 8 caracteres.'
-              }}
-            </p>
+
+            @if (showError('password', 'required')) {
+              <p id="password-error" class="error-message">Informe sua senha.</p>
+            } @else if (showError('password', 'minlength')) {
+              <p id="password-error" class="error-message">
+                A senha deve ter pelo menos 8 caracteres.
+              </p>
+            }
           </div>
 
-          <button type="submit" class="submit-button">Entrar</button>
+          <button
+            type="submit"
+            class="h-[58px] w-full rounded-xl bg-[#0055b8] text-base font-bold text-white shadow-sm transition hover:bg-[#00479e] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0055b8] active:scale-[0.99]"
+          >
+            Entrar
+          </button>
         </form>
 
-        <div class="auth-divider"><span>Ou entrar com</span></div>
-        <div class="social-actions" aria-label="Opções de entrada social">
-          <button type="button" (click)="onSocialLogin('Google')">
-            <svg class="social-icon social-icon--google" aria-hidden="true" viewBox="0 0 24 24">
+        @if (feedback()) {
+          <div
+            class="mt-5 rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-600"
+            role="status"
+            aria-live="polite"
+          >
+            {{ feedback() }}
+          </div>
+        }
+
+        <div class="relative flex py-8 items-center">
+          <div class="flex-grow border-t border-gray-200"></div>
+          <span
+            class="flex-shrink mx-4 text-gray-400 text-[11px] font-semibold uppercase tracking-wider"
+          >
+            Ou entrar com
+          </span>
+          <div class="flex-grow border-t border-gray-200"></div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            class="flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-200 hover:border-gray-300 hover:bg-gray-50/80 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] hover:shadow-xs rounded-lg text-xs font-medium text-gray-700 transition-all duration-200 cursor-pointer"
+            (click)="onSocialLogin('Google')"
+          >
+            <svg class="w-4 h-4" viewBox="0 0 24 24" aria-hidden="true">
               <path
                 fill="#4285F4"
                 d="M21.8 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.5a4.7 4.7 0 0 1-2 3.1v2.5h3.2c1.9-1.8 3.1-4.4 3.1-7.4Z"
@@ -209,27 +277,32 @@
             </svg>
             <span>Google</span>
           </button>
-          <button type="button" (click)="onSocialLogin('GitHub')">
-            <svg
-              class="social-icon social-icon--github"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              aria-hidden="true"
-            >
+
+          <button
+            type="button"
+            class="flex items-center justify-center gap-2 py-2.5 px-4 border border-gray-200 hover:border-gray-300 hover:bg-gray-50/80 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] hover:shadow-xs rounded-lg text-xs font-medium text-gray-700 transition-all duration-200 cursor-pointer"
+            (click)="onSocialLogin('GitHub')"
+          >
+            <svg class="w-4 h-4 text-gray-900" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path
-                d="M12 2.25a9.75 9.75 0 0 0-3.08 19c.49.09.67-.21.67-.47v-1.66c-2.72.59-3.29-1.15-3.29-1.15-.44-1.12-1.08-1.42-1.08-1.42-.89-.61.07-.6.07-.6.98.07 1.5 1 1.5 1 .87 1.49 2.3 1.06 2.86.81.09-.63.34-1.06.62-1.31-2.17-.25-4.45-1.08-4.45-4.82 0-1.06.38-1.93 1-2.61-.1-.25-.43-1.24.1-2.58 0 0 .82-.26 2.68.99a9.3 9.3 0 0 1 4.9 0c1.86-1.25 2.68-.99 2.68-.99.53 1.34.2 2.33.1 2.58.62.68 1 1.55 1 2.61 0 3.75-2.28 4.57-4.46 4.82.35.3.66.88.66 1.78v2.55c0 .26.18.56.68.47A9.75 9.75 0 0 0 12 2.25Z"
-              ></path>
+                d="M12 2a10 10 0 0 0-3.2 19.5c.5.1.7-.2.7-.5v-1.8c-2.8.6-3.4-1.2-3.4-1.2-.5-1.1-1.1-1.4-1.1-1.4-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.3 1.1 2.9.9.1-.6.4-1.1.7-1.4-2.2-.3-4.5-1.1-4.5-4.8 0-1.1.4-1.9 1-2.6-.1-.3-.4-1.3.1-2.6 0 0 .8-.3 2.7 1a9.4 9.4 0 0 1 4.9 0c1.9-1.3 2.7-1 2.7-1 .5 1.3.2 2.3.1 2.6.6.7 1 1.5 1 2.6 0 3.7-2.3 4.5-4.5 4.8.4.3.7 1 .7 1.9V21c0 .3.2.6.7.5A10 10 0 0 0 12 2Z"
+              />
             </svg>
             <span>GitHub</span>
           </button>
         </div>
 
-        <p class="create-account">Não tem uma conta? <a routerLink="/cadastro">Criar Conta</a></p>
-        @if (feedback()) {
-          <p class="feedback" role="status">{{ feedback() }}</p>
-        }
+        <p class="mt-10 text-center text-sm text-gray-600">
+          Não tem uma conta?
+          <a routerLink="/cadastro" class="ml-1 font-semibold text-[#0055b8] hover:underline">
+            Criar Conta
+          </a>
+        </p>
       </div>
-      <p class="page-footer">© 2026 Project A. Gestão profissional de horários.</p>
+
+      <footer class="mt-12 text-center text-xs font-medium text-gray-400">
+        &copy; 2026 Project A. Gestão profissional de horários.
+      </footer>
     </section>
-  </section>
+  </div>
 </main>
