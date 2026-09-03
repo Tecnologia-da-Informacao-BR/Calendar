@@ -28,10 +28,6 @@ export class Login {
     this.passwordVisible.update((visible) => !visible);
   }
 
-  protected onForgotPassword(): void {
-    this.feedback.set('A recuperação de senha estará disponível em breve.');
-  }
-
   protected onSocialLogin(provider: string): void {
     this.feedback.set(`A entrada com ${provider} estará disponível em breve.`);
   }
