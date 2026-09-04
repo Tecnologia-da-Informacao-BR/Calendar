@@ -12,9 +12,9 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <!-- Removido o 17 duplicado, mantendo apenas o 21 -->
+    
     <maven.compiler.release>21</maven.compiler.release>
-    <!-- Versão do JavaFX -->
+    
     <javafx.version>21.0.2</javafx.version>
   </properties>
 
@@ -58,14 +58,12 @@
 
   <build>
     <plugins>
-      <!-- Plugin do JavaFX para rodar a aplicação via Maven -->
       <plugin>
         <groupId>org.openjfx</groupId>
         <artifactId>javafx-maven-plugin</artifactId>
         <version>0.0.8</version>
         <configuration>
-          <!-- ATENÇÃO: Substitua pelo caminho correto da sua classe Main -->
-          <mainClass>br.com.calendar.Main</mainClass>
+          <mainClass>br.com.calendar.App</mainClass>
         </configuration>
       </plugin>
     </plugins>
