@@ -1,46 +1,47 @@
 :host {
   display: block;
   min-height: 100dvh;
-  color: #191d2d;
-  font-family: 'Inter', sans-serif;
-  font-weight: 400;
 }
 
-.login-page {
-  min-height: 100dvh;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  background: #f8f8fe;
+.login-shell {
+  box-shadow: 0 24px 65px -32px rgb(31 41 55 / 0.3);
 }
 
-.login-card {
-  width: min(100%, 360px);
-  display: grid;
-  gap: 12px;
-  padding: 32px;
-  border: 1px solid #d3d9e6;
-  border-radius: 8px;
-  background: #fff;
+.field-shell {
+  border-color: #d6dae6;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease;
 }
 
-.brand-name,
-.login-copy {
-  margin: 0;
-  color: #667085;
-  font-size: 13px;
+.field-shell:hover {
+  border-color: #b9c0d0;
 }
 
-h1 {
-  margin: 0;
-  font-size: 28px;
-  line-height: 1.1;
-  font-weight: 700;
+.field-shell:focus-within {
+  border-color: #0055b8;
+  background-color: #fff;
+  box-shadow: 0 0 0 3px rgb(0 85 184 / 0.12);
 }
 
-a {
-  width: fit-content;
-  color: #075fc2;
+.field-shell.field-error {
+  border-color: #f87171;
+}
+
+.field-shell.field-error:focus-within {
+  box-shadow: 0 0 0 3px rgb(248 113 113 / 0.12);
+}
+
+.error-message {
+  margin-top: 6px;
+  color: #dc2626;
+  font-size: 12px;
   font-weight: 500;
-  text-decoration: none;
+}
+
+@media (max-width: 639px) {
+  .login-shell {
+    min-height: calc(100dvh - 32px);
+  }
 }

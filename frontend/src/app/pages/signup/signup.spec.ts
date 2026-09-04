@@ -24,7 +24,7 @@ describe('Signup', () => {
 
     expect(element.querySelectorAll('input[formControlName]').length).toBe(5);
     expect(element.querySelector('button[type="submit"]')?.textContent?.trim()).toBe('Criar Conta');
-    expect(element.querySelector('a[routerLink="/login"]')).toBeTruthy();
+    expect(element.querySelector('a[routerLink="/entrar"]')).toBeTruthy();
   });
 
   it('should show required errors after an invalid submit', () => {
