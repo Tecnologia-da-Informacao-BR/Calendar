@@ -1,0 +1,207 @@
+<aside
+  class="flex h-dvh w-64 max-w-full flex-col border-r border-gray-200 bg-[#f9f9ff] px-2.5 py-5"
+  aria-label="Navegação lateral"
+>
+  <header class="px-1">
+    <h1 class="text-xl font-bold text-[#0055b8]">Project A</h1>
+    <p class="mt-1 text-sm text-gray-500">Produtividade Pessoal</p>
+  </header>
+
+  <nav class="mt-8" aria-label="Menu principal">
+    <ul class="space-y-1.5">
+      @for (item of navItems; track item.id) {
+        <li>
+          <a
+            href="#"
+            class="flex h-10 items-center gap-3 rounded-lg px-4 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0055b8]"
+            [class]="
+              activeItemId() === item.id
+                ? 'bg-[#d0e1fb] font-semibold text-[#0055b8] shadow-[inset_3px_0_0_0_#0055b8]'
+                : 'font-medium text-gray-500 hover:bg-[#e9edf8] hover:text-gray-900'
+            "
+            [attr.aria-current]="activeItemId() === item.id ? 'page' : null"
+            (click)="onNavClick($event, item.id)"
+          >
+            @switch (item.icon) {
+              @case ('dashboard') {
+                <svg
+                  class="h-[18px] w-[18px] shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <rect width="7" height="9" x="3" y="3" rx="1" />
+                  <rect width="7" height="5" x="14" y="3" rx="1" />
+                  <rect width="7" height="9" x="14" y="12" rx="1" />
+                  <rect width="7" height="5" x="3" y="16" rx="1" />
+                </svg>
+              }
+              @case ('calendar') {
+                <svg
+                  class="h-[18px] w-[18px] shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path d="M8 2v4M16 2v4" />
+                  <rect width="18" height="18" x="3" y="4" rx="2" />
+                  <path d="M3 10h18" />
+                </svg>
+              }
+              @case ('upcoming') {
+                <svg
+                  class="h-[18px] w-[18px] shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path d="M8 2v4M16 2v4" />
+                  <path d="M21 11V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6" />
+                  <path d="m15 19 4-4-4-4" />
+                </svg>
+              }
+              @case ('history') {
+                <svg
+                  class="h-[18px] w-[18px] shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                  <path d="M3 3v5h5" />
+                  <path d="M12 7v5l4 2" />
+                </svg>
+              }
+              @case ('settings') {
+                <svg
+                  class="h-[18px] w-[18px] shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"
+                  />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              }
+            }
+            {{ item.label }}
+          </a>
+        </li>
+      }
+    </ul>
+  </nav>
+
+  <button
+    type="button"
+    class="mt-10 flex h-13 w-full items-center justify-center gap-2 rounded-xl bg-[#0055b8] text-sm font-semibold text-white transition-colors hover:bg-[#004a9f] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0055b8]"
+  >
+    <svg
+      class="h-[18px] w-[18px] shrink-0"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path d="M5 12h14M12 5v14" />
+    </svg>
+    Novo Evento
+  </button>
+
+  <nav
+    class="-mx-2.5 mt-auto border-t border-gray-200 px-2.5 pt-3"
+    aria-label="Recursos adicionais"
+  >
+    <ul class="space-y-2">
+      @for (item of utilityItems; track item.id) {
+        <li>
+          <a
+            href="#"
+            class="flex h-10 items-center gap-3 rounded-lg px-4 text-sm font-medium text-gray-500 transition-colors hover:bg-[#e9edf8] hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0055b8]"
+            (click)="onUtilityClick($event)"
+          >
+            @switch (item.id) {
+              @case ('planejador-estudos') {
+                <svg
+                  class="h-[18px] w-[18px] shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"
+                  />
+                  <path d="M22 10v6" />
+                  <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5" />
+                </svg>
+              }
+              @case ('compartilhamento') {
+                <svg
+                  class="h-[18px] w-[18px] shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <circle cx="18" cy="5" r="3" />
+                  <circle cx="6" cy="12" r="3" />
+                  <circle cx="18" cy="19" r="3" />
+                  <path d="m8.59 13.51 6.83 3.98M15.41 6.51l-6.82 3.98" />
+                </svg>
+              }
+            }
+            {{ item.label }}
+          </a>
+        </li>
+      }
+    </ul>
+
+    <div
+      class="mt-2 flex items-center gap-3 border-t border-gray-200 px-4 pt-3"
+      role="img"
+      aria-label="Perfil de Estefânio"
+    >
+      <span
+        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0055b8] text-sm font-semibold text-white"
+        aria-hidden="true"
+      >
+        {{ user.initials }}
+      </span>
+      <span class="min-w-0">
+        <span class="block truncate text-sm font-semibold text-gray-900">{{ user.name }}</span>
+        <span class="block truncate text-xs text-gray-500">{{ user.email }}</span>
+      </span>
+    </div>
+  </nav>
+</aside>
