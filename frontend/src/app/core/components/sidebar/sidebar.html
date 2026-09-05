@@ -169,11 +169,17 @@
         <li>
           <a
             href="#"
-            class="flex h-10 items-center gap-3 rounded-lg px-4 text-sm font-medium text-gray-500 transition-colors hover:bg-[#e9edf8] hover:text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0055b8]"
-            (click)="onUtilityClick($event)"
+            class="flex h-10 items-center gap-3 rounded-lg px-4 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0055b8]"
+            [class]="
+              activeItemId() === item.id
+                ? 'bg-[#d0e1fb] font-semibold text-[#0055b8] shadow-[inset_3px_0_0_0_#0055b8]'
+                : 'font-medium text-gray-500 hover:bg-[#e9edf8] hover:text-gray-900'
+            "
+            [attr.aria-current]="activeItemId() === item.id ? 'page' : null"
+            (click)="onUtilityClick($event, item.id)"
           >
             @switch (item.id) {
-              @case ('planejador-estudos') {
+              @case ('study-planner') {
                 <svg
                   class="h-[18px] w-[18px] shrink-0"
                   fill="none"
@@ -191,7 +197,7 @@
                   <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5" />
                 </svg>
               }
-              @case ('compartilhamento') {
+              @case ('sharing') {
                 <svg
                   class="h-[18px] w-[18px] shrink-0"
                   fill="none"

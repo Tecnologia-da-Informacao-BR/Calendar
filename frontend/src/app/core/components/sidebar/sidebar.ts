@@ -59,7 +59,9 @@ export class Sidebar {
     this.isOpen.set(false); // Close sidebar on mobile after clicking a link
   }
 
-  protected onUtilityClick(event: Event): void {
+  protected onUtilityClick(event: Event, id: string): void {
     event.preventDefault();
+    this.activeItemId.set(id);
+    this.isOpen.set(false);
   }
 }
