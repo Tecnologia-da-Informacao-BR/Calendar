@@ -32,7 +32,7 @@ describe('Sidebar', () => {
     const element = createComponent().nativeElement as HTMLElement;
 
     const buttons = Array.from(element.querySelectorAll('button'));
-    const newEventButton = buttons.find(b => b.textContent?.includes('Novo Evento'));
+    const newEventButton = buttons.find((b) => b.textContent?.includes('Novo Evento'));
     expect(newEventButton).toBeTruthy();
 
     expect(element.textContent).toContain('Estefânio');

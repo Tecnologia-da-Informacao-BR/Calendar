@@ -50,7 +50,7 @@ export class Sidebar {
   protected readonly isOpen = signal(false);
 
   protected toggleSidebar(): void {
-    this.isOpen.update(v => !v);
+    this.isOpen.update((v) => !v);
   }
 
   protected onNavClick(event: Event, id: string): void {
