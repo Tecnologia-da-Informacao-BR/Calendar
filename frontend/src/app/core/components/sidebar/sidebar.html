@@ -1,5 +1,28 @@
+<!-- Mobile toggle button -->
+<button
+  type="button"
+  class="fixed left-4 top-4 z-40 rounded-md p-2 text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#0055b8] md:hidden"
+  (click)="toggleSidebar()"
+  aria-label="Abrir menu"
+>
+  <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+  </svg>
+</button>
+
+<!-- Mobile backdrop -->
+@if (isOpen()) {
+  <div
+    class="fixed inset-0 z-40 bg-gray-900/50 transition-opacity md:hidden"
+    (click)="toggleSidebar()"
+    aria-hidden="true"
+  ></div>
+}
+
 <aside
-  class="flex h-dvh w-64 max-w-full flex-col border-r border-gray-200 bg-[#f9f9ff] px-2.5 py-5"
+  class="fixed inset-y-0 left-0 z-50 flex h-dvh w-64 flex-col border-r border-gray-200 bg-[#f9f9ff] px-2.5 py-5 transition-transform duration-300 md:static md:translate-x-0"
+  [class.-translate-x-full]="!isOpen()"
+  [class.translate-x-0]="isOpen()"
   aria-label="Navegação lateral"
 >
   <header class="px-1">

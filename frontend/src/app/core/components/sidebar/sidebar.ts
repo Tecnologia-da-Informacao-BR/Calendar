@@ -47,10 +47,16 @@ export class Sidebar {
 
   // Static navigation: routes are not wired yet, so the active item is local state.
   protected readonly activeItemId = signal('proximos');
+  protected readonly isOpen = signal(false);
+
+  protected toggleSidebar(): void {
+    this.isOpen.update(v => !v);
+  }
 
   protected onNavClick(event: Event, id: string): void {
     event.preventDefault();
     this.activeItemId.set(id);
+    this.isOpen.set(false); // Close sidebar on mobile after clicking a link
   }
 
   protected onUtilityClick(event: Event): void {
