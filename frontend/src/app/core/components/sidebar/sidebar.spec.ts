@@ -31,8 +31,9 @@ describe('Sidebar', () => {
   it('should render the new event button and the static user profile', () => {
     const element = createComponent().nativeElement as HTMLElement;
 
-    const newEventButton = element.querySelector('button');
-    expect(newEventButton?.textContent).toContain('Novo Evento');
+    const buttons = Array.from(element.querySelectorAll('button'));
+    const newEventButton = buttons.find(b => b.textContent?.includes('Novo Evento'));
+    expect(newEventButton).toBeTruthy();
 
     expect(element.textContent).toContain('Estefânio');
     expect(element.textContent).toContain('estefaniossi@gmail.com');

@@ -27,16 +27,16 @@ interface SidebarUser {
 })
 export class Sidebar {
   protected readonly navItems: SidebarNavItem[] = [
-    { id: 'painel', label: 'Painel', icon: 'dashboard' },
-    { id: 'calendario', label: 'Calendário', icon: 'calendar' },
-    { id: 'proximos', label: 'Próximos', icon: 'upcoming' },
-    { id: 'historico', label: 'Histórico', icon: 'history' },
-    { id: 'configuracoes', label: 'Configurações', icon: 'settings' },
+    { id: 'dashboard', label: 'Painel', icon: 'dashboard' },
+    { id: 'calendar', label: 'Calendário', icon: 'calendar' },
+    { id: 'upcoming', label: 'Próximos', icon: 'upcoming' },
+    { id: 'history', label: 'Histórico', icon: 'history' },
+    { id: 'settings', label: 'Configurações', icon: 'settings' },
   ];
 
   protected readonly utilityItems: SidebarUtilityItem[] = [
-    { id: 'planejador-estudos', label: 'Planejador de Estudos' },
-    { id: 'compartilhamento', label: 'Compartilhamento' },
+    { id: 'study-planner', label: 'Planejador de Estudos' },
+    { id: 'sharing', label: 'Compartilhamento' },
   ];
 
   protected readonly user: SidebarUser = {
@@ -46,7 +46,7 @@ export class Sidebar {
   };
 
   // Static navigation: routes are not wired yet, so the active item is local state.
-  protected readonly activeItemId = signal('proximos');
+  protected readonly activeItemId = signal('upcoming');
   protected readonly isOpen = signal(false);
 
   protected toggleSidebar(): void {
