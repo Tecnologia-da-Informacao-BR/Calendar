@@ -13,7 +13,7 @@ jobs:
       issues: write
     steps:
       - name: Assign issue to commenter
-        uses: pozil/auto-assign-issue@v2
+        uses: pozil/auto-assign-issue@v4
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           assignees: ${{ github.event.comment.user.login }}
