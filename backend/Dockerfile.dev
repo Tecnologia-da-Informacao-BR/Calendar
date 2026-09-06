@@ -2,7 +2,7 @@
 # Backend (Spring Boot / Java 21) - imagem de DESENVOLVIMENTO
 # Hot reload via spring-boot-devtools + volume montado no compose
 # ==========================================================
-FROM eclipse-temurin:21-jdk-alpine
+FROM eclipse-temurin:25-jdk-alpine
 WORKDIR /app
 
 COPY .mvn/ .mvn/

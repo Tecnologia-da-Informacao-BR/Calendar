@@ -3,7 +3,7 @@
 # ==========================================================
 
 # ---- Etapa 1: build ----
-FROM eclipse-temurin:21-jdk-alpine AS build
+FROM eclipse-temurin:25-jdk-alpine AS build
 WORKDIR /app
 
 # Copia primeiro só o necessário para resolver dependências (cache de camada)
@@ -17,7 +17,7 @@ COPY src ./src
 RUN ./mvnw -B clean package -DskipTests
 
 # ---- Etapa 2: runtime ----
-FROM eclipse-temurin:21-jre-alpine AS runtime
+FROM eclipse-temurin:25-jre-alpine AS runtime
 WORKDIR /app
 
 # curl só para o healthcheck (ver observação abaixo)
