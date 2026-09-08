@@ -38,7 +38,6 @@ export class ResetPassword {
   protected readonly showPassword = signal(false);
   protected readonly generalError = signal<string | null>(null);
 
-  // Importar aqui o FormBuilder e criar o formulário com os campos necessários
   protected readonly form = this.formBuilder.group(
     {
       password: [

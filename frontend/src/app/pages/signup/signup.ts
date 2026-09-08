@@ -17,7 +17,7 @@ export type SignupField = 'name' | 'email' | 'password' | 'password_confirmation
  * Name regex: allows letters (including Portuguese accents), spaces, hyphens, and apostrophes.
  * Rejects emojis, numbers, and special symbols.
  */
-export const NAME_PATTERN = /^[a-zA-ZÀ-ÖØ-öø-ÿ\s'-]*$/;
+export const NAME_PATTERN = /^[a-zA-ZÀ-ÖØ-öø-ÿ\s'-]+$/;
 
 /**
  * Standard email regex: prevents emojis and non-standard symbols.

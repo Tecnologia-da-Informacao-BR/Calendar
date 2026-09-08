@@ -1,7 +1,3 @@
-
-
-
-
 import { Validators } from '@angular/forms';
 
 export const PASSWORD_PATTERN = /^[\x20-\x7E]*$/;
