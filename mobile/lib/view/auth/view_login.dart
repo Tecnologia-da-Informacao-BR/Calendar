@@ -1,9 +1,9 @@
-import 'package:calendar/view/auth/ViewForgotPassword.dart';
-import 'package:calendar/view/auth/ViewSignup.dart';
-import 'package:calendar/widget/WidgetBody.dart';
-import 'package:calendar/widget/WidgetButton.dart';
-import 'package:calendar/widget/WidgetInput.dart';
-import 'package:calendar/widget/WidgetOAuth.dart';
+import 'package:calendar/view/auth/view_forgot_password.dart';
+import 'package:calendar/view/auth/view_signup.dart';
+import 'package:calendar/widget/widget_body.dart';
+import 'package:calendar/widget/widget_button.dart';
+import 'package:calendar/widget/widget_input.dart';
+import 'package:calendar/widget/widget_oauth.dart';
 import 'package:flutter/material.dart';
 
 class ViewLogin extends StatefulWidget {

@@ -1,4 +1,4 @@
-package br.com.calendar2
+package br.com.calendar
 
 import io.flutter.embedding.android.FlutterActivity
 

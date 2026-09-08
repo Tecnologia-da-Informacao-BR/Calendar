@@ -1,7 +1,7 @@
-import 'package:calendar/view/ViewHome.dart';
-import 'package:calendar/view/auth/ViewForgotPassword.dart';
-import 'package:calendar/view/auth/ViewLogin.dart';
-import 'package:calendar/view/auth/ViewSignup.dart';
+import 'package:calendar/view/view_home.dart';
+import 'package:calendar/view/auth/view_forgot_password.dart';
+import 'package:calendar/view/auth/view_login.dart';
+import 'package:calendar/view/auth/view_signup.dart';
 import 'package:flutter/material.dart';
 
 void main() {
