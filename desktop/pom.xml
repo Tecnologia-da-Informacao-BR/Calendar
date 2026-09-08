@@ -31,7 +31,7 @@
   </dependencyManagement>
 
   <dependencies>
-    <!-- Dependências do JavaFX -->
+    <!--JavaFX -->
     <dependency>
       <groupId>org.openjfx</groupId>
       <artifactId>javafx-controls</artifactId>
@@ -43,7 +43,20 @@
       <version>${javafx.version}</version>
     </dependency>
 
-    <!-- Dependências de Teste -->
+    <!--Ikonli -->
+    <dependency>
+        <groupId>org.kordamp.ikonli</groupId>
+        <artifactId>ikonli-javafx</artifactId>
+        <version>12.4.0</version>
+    </dependency>
+    
+    <dependency>
+        <groupId>org.kordamp.ikonli</groupId>
+        <artifactId>ikonli-materialdesign2-pack</artifactId>
+        <version>12.4.0</version>
+    </dependency>
+
+    <!--Test -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>
