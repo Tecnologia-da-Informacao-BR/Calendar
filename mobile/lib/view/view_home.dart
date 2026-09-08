@@ -1,4 +1,4 @@
-import 'package:calendar/widget/WidgetBody.dart';
+import 'package:calendar/widget/widget_body.dart';
 import 'package:flutter/material.dart';
 
 class ViewHome extends StatefulWidget {

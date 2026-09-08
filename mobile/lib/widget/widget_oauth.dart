@@ -1,4 +1,4 @@
-import 'package:calendar/widget/WidgetOAuthButton.dart';
+import 'package:calendar/widget/widget_oauth_button.dart';
 import 'package:flutter/material.dart';
 
 class WidgetOAuth extends StatefulWidget {

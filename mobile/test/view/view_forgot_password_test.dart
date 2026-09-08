@@ -1,5 +1,5 @@
-import 'package:calendar/view/auth/ViewForgotPassword.dart';
-import 'package:calendar/widget/WidgetButton.dart';
+import 'package:calendar/view/auth/view_forgot_password.dart';
+import 'package:calendar/widget/widget_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

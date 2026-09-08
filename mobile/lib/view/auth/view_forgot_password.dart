@@ -1,7 +1,7 @@
-import 'package:calendar/view/auth/ViewLogin.dart';
-import 'package:calendar/widget/WidgetBody.dart';
-import 'package:calendar/widget/WidgetButton.dart';
-import 'package:calendar/widget/WidgetInput.dart';
+import 'package:calendar/view/auth/view_login.dart';
+import 'package:calendar/widget/widget_body.dart';
+import 'package:calendar/widget/widget_button.dart';
+import 'package:calendar/widget/widget_input.dart';
 import 'package:flutter/material.dart';
 
 class ViewForgotPassword extends StatefulWidget {
