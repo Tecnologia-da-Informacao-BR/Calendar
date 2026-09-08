@@ -1,30 +1,35 @@
 import 'package:flutter/material.dart';
 
-class WidgetBody extends StatefulWidget {
+class WidgetBody extends StatelessWidget {
   const WidgetBody({
     super.key,
     this.children = const [],
+    this.title,
+    this.bottomNavigationBar,
+    this.floatingActionButton,
   });
 
   final List<Widget> children;
+  final String? title;
+  final Widget? bottomNavigationBar;
+  final Widget? floatingActionButton;
 
-  @override
-  State<WidgetBody> createState() => _WidgetBodyState();
-}
-
-class _WidgetBodyState extends State<WidgetBody> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(30.0),
+      backgroundColor: const Color(0xFFF7F8FC),
+      appBar: title == null ? null : AppBar(title: Text(title!)),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
           child: Column(
-            children: widget.children,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: children,
           ),
         ),
       ),
+      bottomNavigationBar: bottomNavigationBar,
+      floatingActionButton: floatingActionButton,
     );
   }
 }

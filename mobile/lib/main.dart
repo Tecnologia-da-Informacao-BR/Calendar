@@ -15,11 +15,12 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: "Calendar",
+
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      initialRoute: "/login",
+      initialRoute: "/",
       routes: {
         "/": (context) => const ViewHome(),
         "/login": (context) => const ViewLogin(),
