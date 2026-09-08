@@ -17,7 +17,7 @@ class _ViewHome extends State<ViewHome> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: Color(0xFFE6F0FF),
         onPressed: () {
-          // Depois abriremos a tela de Novo Evento.
+          // Open new event
         },
         child: const Icon(Icons.add),
       ),
@@ -134,7 +134,7 @@ class _ViewHome extends State<ViewHome> {
   }
 
   // ----------------------------------------------------------
-  // RESUMO
+  // RESUME
   // ----------------------------------------------------------
 
   Widget _buildSummary(BuildContext context) {
@@ -209,7 +209,7 @@ class _ViewHome extends State<ViewHome> {
   }
 
   // ----------------------------------------------------------
-  // ATIVIDADES
+  // ACTIVITIES
   // ----------------------------------------------------------
 
   Widget _buildSectionTitle() {
@@ -297,7 +297,7 @@ class _ViewHome extends State<ViewHome> {
   }
 
   // ----------------------------------------------------------
-  // CALENDÁRIO
+  // CALENDAR
   // ----------------------------------------------------------
 
   Widget _buildCalendar(BuildContext context) {
