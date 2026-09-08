@@ -73,10 +73,7 @@ export class Signup {
     {
       name: ['', [Validators.required, Validators.minLength(2), Validators.pattern(NAME_PATTERN)]],
       email: ['', [Validators.required, Validators.email, Validators.pattern(EMAIL_PATTERN)]],
-      password: [
-        '',
-        PASSWORD_VALIDATORS
-      ],
+      password: ['', PASSWORD_VALIDATORS],
       password_confirmation: ['', [Validators.required]],
       terms: [false, [Validators.requiredTrue]],
     },

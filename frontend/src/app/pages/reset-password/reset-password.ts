@@ -40,10 +40,7 @@ export class ResetPassword {
 
   protected readonly form = this.formBuilder.group(
     {
-      password: [
-        '',
-        PASSWORD_VALIDATORS,
-      ],
+      password: ['', PASSWORD_VALIDATORS],
       password_confirmation: ['', Validators.required],
     },
     { validators: passwordsMatchValidator() },
