@@ -9,6 +9,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
+import { PASSWORD_VALIDATORS } from '../../shared/validators/password';
 
 export type SignupField = 'name' | 'email' | 'password' | 'password_confirmation' | 'terms';
 
@@ -22,11 +23,6 @@ export const NAME_PATTERN = /^[a-zA-ZÀ-ÖØ-öø-ÿ\s'-]+$/;
  * Standard email regex: prevents emojis and non-standard symbols.
  */
 export const EMAIL_PATTERN = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-
-/**
- * Password pattern: printable ASCII characters only (letters, numbers, symbols, no emojis).
- */
-export const PASSWORD_PATTERN = /^[\x20-\x7E]+$/;
 
 /**
  * Group-level validator to ensure password and confirmation match.
@@ -77,10 +73,7 @@ export class Signup {
     {
       name: ['', [Validators.required, Validators.minLength(2), Validators.pattern(NAME_PATTERN)]],
       email: ['', [Validators.required, Validators.email, Validators.pattern(EMAIL_PATTERN)]],
-      password: [
-        '',
-        [Validators.required, Validators.minLength(8), Validators.pattern(PASSWORD_PATTERN)],
-      ],
+      password: ['', PASSWORD_VALIDATORS],
       password_confirmation: ['', [Validators.required]],
       terms: [false, [Validators.requiredTrue]],
     },

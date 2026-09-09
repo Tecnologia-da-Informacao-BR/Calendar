@@ -8,11 +8,8 @@ import {
   NonNullableFormBuilder,
 } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-
+import { PASSWORD_VALIDATORS } from '../../shared/validators/password';
 type ResetPasswordField = 'password' | 'password_confirmation';
-
-const PASSWORD_PATTERN = /^[\x20-\x7E]+$/;
-
 function passwordsMatchValidator(): ValidatorFn {
   return (group: AbstractControl): ValidationErrors | null => {
     const password = group.get('password')?.value;
@@ -43,10 +40,7 @@ export class ResetPassword {
 
   protected readonly form = this.formBuilder.group(
     {
-      password: [
-        '',
-        [Validators.required, Validators.minLength(8), Validators.pattern(PASSWORD_PATTERN)],
-      ],
+      password: ['', PASSWORD_VALIDATORS],
       password_confirmation: ['', Validators.required],
     },
     { validators: passwordsMatchValidator() },
