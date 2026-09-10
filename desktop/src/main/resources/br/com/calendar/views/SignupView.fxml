@@ -31,13 +31,12 @@
     <VBox 
         fx:id="brandPanel" 
         styleClass="brand-panel" 
-        HBox.hgrow="ALWAYS"
         minWidth="0">
 
         <VBox styleClass="brand-text-container"
             alignment="CENTER" 
             spacing="16"
-            VBox.vgrow="ALWAYS">
+            VBox.vgrow="NEVER">
             <padding>
                 <Insets top="80" right="48" bottom="0" left="48"/>
             </padding>
@@ -46,10 +45,9 @@
             <Label text="Project A" styleClass="brand-title"/>
 
             <!-- ===== Description ===== -->
-            <TextFlow prefWidth="360" 
-                    maxWidth="360" 
+            <TextFlow prefWidth="400" 
+                    maxWidth="400" 
                     textAlignment="CENTER">
-
                 <Text styleClass = "brand-description"
                     text = "Entre em um mundo de clareza e produtividade calma. Gerencie sua carga cognitiva com nossa interface livre de distrações, projetada para o profissional moderno."/>
             </TextFlow>
@@ -58,12 +56,12 @@
 
         <!-- ===== Cards ===== -->
         <HBox styleClass="feature-row" 
-            spacing="20" 
+            spacing="16" 
             alignment="CENTER"
             VBox.vgrow="NEVER">
             
             <padding>
-                <Insets top="32" bottom="32" left="48" right="48"/>
+                <Insets top="28" bottom="28" left="40" right="40"/>
             </padding>
 
             <VBox 
@@ -92,18 +90,18 @@
             </VBox>
         </HBox>
 
+
         <!-- ===== Footer background ===== -->
         <StackPane fx:id="brandDecorativeFooter" 
                 styleClass="brand-decorative-footer" 
-                VBox.vgrow="NEVER">
+                VBox.vgrow="ALWAYS">
 
             <ImageView fx:id="brandBackgroundImage" 
-                    smooth="true" >
-
-
+                    smooth="true"
+                    preserveRatio="true">
                 <image>
                     <Image url="@../images/brand_background.jpg" 
-                        backgroundLoading="true"/>
+                        backgroundLoading="false"/>
                     </image>
             </ImageView>
             <Region styleClass="brand-decorative-overlay"/>
@@ -111,12 +109,14 @@
     </VBox>
 
     <!-- ===== Right panel ===== -->
-    <StackPane HBox.hgrow="ALWAYS" 
+    <StackPane fx:id="formPanel" 
+            HBox.hgrow="ALWAYS" 
             styleClass="form-panel"
-            minWidth="0">
+            minWidth="0"
+            alignment="CENTER">
 
-        <VBox styleClass="form-content" 
-            maxWidth="480" 
+        <VBox fx:id="formContent"
+            styleClass="form-content" 
             alignment="TOP_LEFT" 
             spacing="12">
 
@@ -125,12 +125,17 @@
             </padding>
 
             <!-- ===== Header ===== -->
-            <Label text="Junte-se ao movimento" 
-                styleClass="form-title"/>
 
-            <Label text="Crie seu centro de produtividade profissional hoje mesmo."
-                styleClass="form-subtitle" 
-                wrapText="true"/>
+            <TextFlow>
+                <Text styleClass= "form-title"
+                    text="Junte-se ao movimento"/>
+            </TextFlow>
+
+            <TextFlow>
+                <Text styleClass="form-subtitle"
+                    text="Crie seu centro de produtividade profissional hoje mesmo."/>
+            </TextFlow>
+
 
             <!-- Name -->
             <VBox spacing="4">
@@ -140,7 +145,7 @@
                     alignment="CENTER_LEFT">
 
                     <FontIcon iconLiteral="mdi2a-account-outline" 
-                        styleClass="feature-icon"/>
+                        styleClass="input-icon"/>
 
                     <TextField fx:id="nameField" 
                             promptText="Estefânio"
@@ -160,7 +165,7 @@
                     alignment="CENTER_LEFT">
 
                     <FontIcon iconLiteral="mdi2e-email-outline" 
-                            styleClass="feature-icon"/>
+                            styleClass="input-icon"/>
 
                     <TextField fx:id="emailField" 
                             promptText="exemplo@projeto-a.com"
@@ -181,7 +186,7 @@
                         alignment="CENTER_LEFT">
 
                         <FontIcon iconLiteral="mdi2l-lock-outline" 
-                                styleClass="feature-icon"/>
+                                styleClass="input-icon"/>
 
                         <PasswordField fx:id="passwordField" 
                                 promptText="Senha"
@@ -202,7 +207,7 @@
                         alignment="CENTER_LEFT">
 
                         <FontIcon iconLiteral="mdi2l-lock-check-outline" 
-                                styleClass="feature-icon"/>
+                                styleClass="input-icon"/>
 
                         <PasswordField fx:id="passwordConfirmationField" 
                                 promptText="Confirmar senha"

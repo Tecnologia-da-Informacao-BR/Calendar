@@ -11,10 +11,11 @@ public class App extends Application {
         SceneManager.navigate("/signup"); // troque pra "/login" quando ela existir
         
         primaryStage.setTitle("Project A - Agenda Mensal");
-        primaryStage.setWidth(1280);
-        primaryStage.setHeight(720);
-        primaryStage.setMinWidth(1000);
-        primaryStage.setMinHeight(650);
+        primaryStage.setWidth(960);
+        primaryStage.setHeight(768);
+        primaryStage.setMinWidth(800);
+        primaryStage.setMinHeight(640);
+        primaryStage.centerOnScreen();
         primaryStage.show();
     }
 
