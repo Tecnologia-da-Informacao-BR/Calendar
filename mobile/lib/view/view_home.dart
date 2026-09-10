@@ -17,7 +17,7 @@ class _ViewHome extends State<ViewHome> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: Color(0xFFE6F0FF),
         onPressed: () {
-          // Open new event
+          Navigator.pushNamed(context, "/create-event");
         },
         child: const Icon(Icons.add),
       ),
