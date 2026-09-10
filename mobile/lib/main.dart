@@ -1,3 +1,4 @@
+import 'package:calendar/view/ViewCreateEvent.dart';
 import 'package:calendar/view/ViewHome.dart';
 import 'package:calendar/view/auth/ViewLogin.dart';
 import 'package:calendar/view/auth/ViewSignup.dart';
@@ -23,6 +24,7 @@ class MyApp extends StatelessWidget {
         "/": (context) => const ViewHome(),
         "/login": (context) => const ViewLogin(),
         "/signup": (context) => const ViewSignup(),
+        "/create-event": (context) => const ViewCreateEvent(),
       },
     );
   }
