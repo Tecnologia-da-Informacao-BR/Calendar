@@ -1,7 +1,8 @@
-import 'package:calendar/view/view_home.dart';
 import 'package:calendar/view/auth/view_forgot_password.dart';
 import 'package:calendar/view/auth/view_login.dart';
 import 'package:calendar/view/auth/view_signup.dart';
+import 'package:calendar/view/view_create_event.dart';
+import 'package:calendar/view/view_home.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -26,6 +27,7 @@ class MyApp extends StatelessWidget {
         "/login": (context) => const ViewLogin(),
         "/signup": (context) => const ViewSignup(),
         "/forgot-password": (context) => const ViewForgotPassword(),
+        "/create-event": (context) => const ViewCreateEvent(),
       },
     );
   }
