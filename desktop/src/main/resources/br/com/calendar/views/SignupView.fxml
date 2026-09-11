@@ -30,23 +30,26 @@
     <!-- ===== Left panel (branding) ===== -->
     <VBox 
         fx:id="brandPanel" 
-        styleClass="brand-panel" 
+        styleClass="brand-panel"
+        HBox.hgrow = "ALWAYS"
         minWidth="0">
+
+        <Region VBox.vgrow="ALWAYS"/>
 
         <VBox styleClass="brand-text-container"
             alignment="CENTER" 
             spacing="16"
             VBox.vgrow="NEVER">
             <padding>
-                <Insets top="80" right="48" bottom="0" left="48"/>
+                <Insets top="100" right="48" bottom="0" left="48"/>
             </padding>
 
             <!-- ===== Title ===== -->
             <Label text="Project A" styleClass="brand-title"/>
 
             <!-- ===== Description ===== -->
-            <TextFlow prefWidth="400" 
-                    maxWidth="400" 
+            <TextFlow prefWidth="460" 
+                    maxWidth="460" 
                     textAlignment="CENTER">
                 <Text styleClass = "brand-description"
                     text = "Entre em um mundo de clareza e produtividade calma. Gerencie sua carga cognitiva com nossa interface livre de distrações, projetada para o profissional moderno."/>
@@ -61,13 +64,14 @@
             VBox.vgrow="NEVER">
             
             <padding>
-                <Insets top="28" bottom="28" left="40" right="40"/>
+                <Insets top="28" bottom="8" left="85" right="85"/>
             </padding>
 
             <VBox 
-                styleClass="feature-card, feature-card-right"
+                styleClass="feature-card"
                 spacing="7" 
-                alignment="CENTER_LEFT">
+                alignment="CENTER_LEFT"
+                rotate="-3.01">
 
                 <FontIcon iconLiteral="mdi2c-calendar" 
                 styleClass="feature-icon"/>
@@ -77,9 +81,10 @@
                     wrapText="true"/>
             </VBox>
 
-            <VBox styleClass="feature-card, feature-card-left"
+            <VBox styleClass="feature-card"
                 spacing="7" 
-                alignment="CENTER_LEFT">
+                alignment="CENTER_LEFT"
+                rotate="2">
 
                 <FontIcon iconLiteral="mdi2l-lightning-bolt" 
                 styleClass="feature-icon"/>
@@ -94,7 +99,8 @@
         <!-- ===== Footer background ===== -->
         <StackPane fx:id="brandDecorativeFooter" 
                 styleClass="brand-decorative-footer" 
-                VBox.vgrow="ALWAYS">
+                alignment = "CENTER"
+                VBox.vgrow="NEVER">
 
             <ImageView fx:id="brandBackgroundImage" 
                     smooth="true"
@@ -113,33 +119,31 @@
             HBox.hgrow="ALWAYS" 
             styleClass="form-panel"
             minWidth="0"
-            alignment="CENTER">
+            alignment="TOP_CENTER">
 
         <VBox fx:id="formContent"
             styleClass="form-content" 
             alignment="TOP_LEFT" 
-            spacing="12">
+            spacing="16">
 
             <padding>
-                <Insets top="40" right="50" bottom="20" left="50"/>
+                <Insets top="40" right="45" bottom="20" left="45"/>
             </padding>
 
             <!-- ===== Header ===== -->
 
-            <TextFlow>
-                <Text styleClass= "form-title"
-                    text="Junte-se ao movimento"/>
-            </TextFlow>
+            <VBox spacing="4">
+                <Label text="Junte-se ao movimento" 
+                    styleClass="form-title"/>
 
-            <TextFlow>
-                <Text styleClass="form-subtitle"
-                    text="Crie seu centro de produtividade profissional hoje mesmo."/>
-            </TextFlow>
-
+                <Label text="Crie seu centro de produtividade profissional hoje mesmo." 
+                    styleClass="form-subtitle"/>
+            </VBox>
 
             <!-- Name -->
-            <VBox spacing="4">
-                <Label text="NOME COMPLETO" styleClass="field-label"/>
+            <VBox spacing="5">
+                <Label text="NOME COMPLETO" 
+                    styleClass="field-label"/>
 
                 <HBox styleClass="input-wrapper" 
                     alignment="CENTER_LEFT">
@@ -159,7 +163,8 @@
 
             <!-- Email -->
             <VBox spacing="4">
-                <Label text="ENDEREÇO DE E-MAIL" styleClass="field-label"/>
+                <Label text="ENDEREÇO DE E-MAIL" 
+                    styleClass="field-label"/>
 
                 <HBox styleClass="input-wrapper" 
                     alignment="CENTER_LEFT">
@@ -179,8 +184,11 @@
 
             <!-- Password / Confirm Password -->
             <HBox spacing="14">
-                <VBox spacing="4" HBox.hgrow="ALWAYS">
-                    <Label text="SENHA" styleClass="field-label"/>
+                <VBox spacing="5" 
+                    HBox.hgrow="ALWAYS">
+                    
+                    <Label text="SENHA" 
+                        styleClass="field-label"/>
 
                     <HBox styleClass="input-wrapper" 
                         alignment="CENTER_LEFT">
@@ -200,7 +208,7 @@
                             visible="false"/>
                 </VBox>
 
-                <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
                     <Label text="CONFIRMAR SENHA" styleClass="field-label"/>
 
                     <HBox styleClass="input-wrapper" 
@@ -228,15 +236,17 @@
                     visible="false"/>
 
             <!-- Terms -->
-            <HBox spacing="9" alignment="CENTER_LEFT">
+            <HBox spacing="9" 
+                alignment="CENTER_LEFT">
                 <CheckBox fx:id="termsCheckBox" 
                     styleClass="terms-checkbox"/>
 
                 <TextFlow styleClass="terms-text">
                     <Text text="Eu concordo com os "/>
 
-                    <Hyperlink fx:id="termsLink" text="Termos e Condições" 
-                            styleClass="inline-link"/>
+                    <Hyperlink fx:id="termsLink" 
+                        text="Termos e Condições" 
+                        styleClass="inline-link"/>
 
                     <Text text=" e com a "/>
 
@@ -256,10 +266,16 @@
                     onAction="#handleSignup"/>
 
             <!-- Divider -->
-            <HBox alignment="CENTER" spacing="14">
+            <HBox alignment="CENTER" 
+                spacing="14">
+                
                 <Separator HBox.hgrow="ALWAYS"/>
-                <Label text="OU REGISTRE-SE COM" styleClass="divider-label"/>
+
+                <Label text="OU REGISTRE-SE COM" 
+                    styleClass="divider-label"/>
+
                 <Separator HBox.hgrow="ALWAYS"/>
+
             </HBox>
 
             <!-- Social login buttons -->
@@ -306,7 +322,8 @@
             </HBox>
 
             <!-- Login link -->
-            <HBox alignment="CENTER" spacing="5">
+            <HBox alignment="CENTER" 
+                spacing="5">
 
                 <Label text="Já tem uma conta?" 
                     styleClass="footer-text"/>
@@ -318,7 +335,9 @@
             </HBox>
 
             <!-- Copyright -->
-            <Region VBox.vgrow="ALWAYS"/>
+            <Region VBox.vgrow="ALWAYS" 
+                minHeight="40"/>
+                
             <HBox alignment="CENTER">
                 <Label text="© 2026 Project A. Todos os direitos reservados." 
                     styleClass="copyright-label"/>

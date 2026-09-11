@@ -33,15 +33,14 @@ public class SignupController {
     @FXML private Hyperlink termsLink;
     @FXML private Hyperlink privacyLink;
     @FXML private Hyperlink loginLink;
-    
+
     @FXML private ImageView brandBackgroundImage;
     @FXML private VBox brandPanel;
     @FXML private StackPane brandDecorativeFooter;
     @FXML private HBox root;
     @FXML private StackPane formPanel;
     @FXML private VBox formContent;
-
-
+    
     @FXML
     private void handleSignup(){
 
@@ -71,75 +70,64 @@ public class SignupController {
     }
 
 
-    @FXML
-    public void initialize() {
+@FXML
+public void initialize() {
 
-        // Form content 
-        formContent.prefWidthProperty().bind(
-            Bindings.min(560, Bindings.max(360, formPanel.widthProperty().subtract(100)))
-        );
+    
+    brandPanel.prefWidthProperty().bind(root.widthProperty().multiply(0.5));
+    brandPanel.maxWidthProperty().bind(brandPanel.prefWidthProperty());
 
-        formContent.maxWidthProperty().bind(formContent.prefWidthProperty());
-        
-        formContent.translateYProperty().bind(formPanel.heightProperty().multiply(-0.04));
-        formContent.maxWidthProperty().bind(formContent.prefWidthProperty());
-        
-        // Screen division 
-        brandPanel.prefWidthProperty().bind(root.widthProperty().multiply(0.5));
-        formPanel.prefWidthProperty().bind(root.widthProperty().multiply(0.5));
+    formPanel.prefWidthProperty().bind(root.widthProperty().multiply(0.5));
+    formPanel.maxWidthProperty().bind(formPanel.prefWidthProperty());
 
-        // Background Image
-        brandBackgroundImage.setPreserveRatio(true);
 
-        // Ensures that the image never extends beyond the footer
-        Rectangle clip = new Rectangle();
-        clip.widthProperty().bind(brandDecorativeFooter.widthProperty());
-        clip.heightProperty().bind(brandDecorativeFooter.heightProperty());
-        brandBackgroundImage.setClip(clip);
+    double footerRatio = 0.335;
 
-        Runnable updateImageCover = () -> {
+    brandDecorativeFooter.prefHeightProperty().bind(
+        brandPanel.heightProperty().multiply(footerRatio)
+    );
+    brandDecorativeFooter.minHeightProperty().bind(brandDecorativeFooter.prefHeightProperty());
+    brandDecorativeFooter.maxHeightProperty().bind(brandDecorativeFooter.prefHeightProperty());
 
+    
+    var formWidth = Bindings.createDoubleBinding(
+        () -> Math.min(720, Math.max(460, formPanel.getWidth() * 0.72)),
+        formPanel.widthProperty()
+    );
+
+    formContent.prefWidthProperty().bind(formWidth);
+    formContent.maxWidthProperty().bind(formWidth);
+
+
+    brandBackgroundImage.setPreserveRatio(true);
+
+    Rectangle clip = new Rectangle();
+    clip.widthProperty().bind(brandDecorativeFooter.widthProperty());
+    clip.heightProperty().bind(brandDecorativeFooter.heightProperty());
+    brandDecorativeFooter.setClip(clip);
+
+    Runnable updateImageCover = () -> {
         if (brandBackgroundImage.getImage() == null) {
             return;
         }
 
         double containerWidth = brandDecorativeFooter.getWidth();
         double containerHeight = brandDecorativeFooter.getHeight();
-
         double imageWidth = brandBackgroundImage.getImage().getWidth();
         double imageHeight = brandBackgroundImage.getImage().getHeight();
 
-        if (containerWidth <= 0 ||
-            containerHeight <= 0 ||
-            imageWidth <= 0 ||
-            imageHeight <= 0) {
+        if (containerWidth <= 0 || containerHeight <= 0 || imageWidth <= 0 || imageHeight <= 0) {
             return;
         }
 
-        double scale = Math.max(
-                containerWidth / imageWidth,
-                containerHeight / imageHeight
-        );
-
-        brandBackgroundImage.setFitWidth(
-                imageWidth * scale
-        );
-
-        brandBackgroundImage.setFitHeight(
-                imageHeight * scale
-        );
+        double scale = Math.max(containerWidth / imageWidth, containerHeight / imageHeight);
+        brandBackgroundImage.setFitWidth(imageWidth * scale);
+        brandBackgroundImage.setFitHeight(imageHeight * scale);
     };
 
-        brandDecorativeFooter.widthProperty().addListener(
-            (obs, oldVal, newVal) -> updateImageCover.run()
-        );
-
-        brandDecorativeFooter.heightProperty().addListener(
-            (obs, oldVal, newVal) -> updateImageCover.run()
-        );
-
-        updateImageCover.run();
-
-    }
+    brandDecorativeFooter.widthProperty().addListener((obs, oldVal, newVal) -> updateImageCover.run());
+    brandDecorativeFooter.heightProperty().addListener((obs, oldVal, newVal) -> updateImageCover.run());
+    updateImageCover.run();
+}
 
 }
