@@ -1,6 +1,7 @@
 package br.com.calendar.category;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -8,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import br.com.calendar.category.dto.CategoryRequestDTO;
 import br.com.calendar.category.dto.CategoryResponseDTO;
+import br.com.calendar.category.dto.CategoryUpdateDTO;
 import br.com.calendar.common.exception.ResourceNotFoundException;
 import br.com.calendar.user.User;
 import br.com.calendar.user.UserRepository;
@@ -47,5 +49,23 @@ public class CategoryService {
     public Category getCategoryOwnedByUser(String categoryId, String userId) {
         return categoryRepository.findByIdAndUser_IdAndDeletedAtIsNull(categoryId, userId)
                 .orElseThrow(() -> new AccessDeniedException("Category does not belong to the current user"));
+    }
+
+    @Transactional
+    public CategoryResponseDTO updateCategory(CategoryUpdateDTO request, String categoryId, String userId) {
+        Category category = findCategoryOwnedByUser(categoryId, userId);
+        categoryMapper.updateEntity(category, request);
+        return categoryMapper.toResponse(categoryRepository.save(category));
+    }
+
+    private Category findCategoryOwnedByUser(String categoryId, String userId) {
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+
+        if (!Objects.equals(category.getUser().getId(), userId)) {
+            throw new AccessDeniedException("Category does not belong to the current user");
+        }
+
+        return category;
     }
 }

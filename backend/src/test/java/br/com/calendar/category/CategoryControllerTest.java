@@ -2,6 +2,7 @@ package br.com.calendar.category;
 
 import br.com.calendar.category.dto.CategoryRequestDTO;
 import br.com.calendar.category.dto.CategoryResponseDTO;
+import br.com.calendar.category.dto.CategoryUpdateDTO;
 import br.com.calendar.common.exception.GlobalExceptionHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,6 +22,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -115,6 +117,34 @@ class CategoryControllerTest {
     @Test
     void getCategoriesReturns401WhenNotAuthenticated() throws Exception {
         mockMvc.perform(get("/categories"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void updatesCategoryForTheAuthenticatedUser() throws Exception {
+        CategoryUpdateDTO request = new CategoryUpdateDTO("Personal", null, null);
+        CategoryResponseDTO expected = new CategoryResponseDTO(
+                "cat_123", "Personal", "3366FF", "briefcase");
+        when(categoryService.updateCategory(request, "cat_123", USER_ID)).thenReturn(expected);
+
+        mockMvc.perform(patch("/categories/cat_123")
+                        .principal(new UsernamePasswordAuthenticationToken(USER_ID, null))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"Personal\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("cat_123"))
+                .andExpect(jsonPath("$.title").value("Personal"))
+                .andExpect(jsonPath("$.color").value("3366FF"))
+                .andExpect(jsonPath("$.icon").value("briefcase"));
+
+        verify(categoryService).updateCategory(request, "cat_123", USER_ID);
+    }
+
+    @Test
+    void updateCategoryReturns401WhenNotAuthenticated() throws Exception {
+        mockMvc.perform(patch("/categories/cat_123")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"Personal\"}"))
                 .andExpect(status().isUnauthorized());
     }
 }
