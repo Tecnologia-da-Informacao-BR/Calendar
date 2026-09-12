@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Text?>
+<?import javafx.scene.text.TextFlow?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.shape.Rectangle?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<HBox xmlns="http://javafx.com/javafx"
+        xmlns:fx="http://javafx.com/fxml"
+        fx:controller="br.com.calendar.controllers.SignupController"
+        fx:id="root"
+        prefWidth="1280"
+        prefHeight="1024"
+        styleClass="signup-root">
+
+    <!-- ===== Left panel (branding) ===== -->
+    <VBox 
+        fx:id="brandPanel" 
+        styleClass="brand-panel"
+        HBox.hgrow = "ALWAYS"
+        minWidth="0">
+
+        <Region VBox.vgrow="ALWAYS"/>
+
+        <VBox styleClass="brand-text-container"
+            alignment="CENTER" 
+            spacing="16"
+            VBox.vgrow="NEVER">
+            <padding>
+                <Insets top="100" right="48" bottom="0" left="48"/>
+            </padding>
+
+            <!-- ===== Title ===== -->
+            <Label text="Project A" styleClass="brand-title"/>
+
+            <!-- ===== Description ===== -->
+            <TextFlow prefWidth="460" 
+                    maxWidth="460" 
+                    textAlignment="CENTER">
+                <Text styleClass = "brand-description"
+                    text = "Entre em um mundo de clareza e produtividade calma. Gerencie sua carga cognitiva com nossa interface livre de distrações, projetada para o profissional moderno."/>
+            </TextFlow>
+
+        </VBox>
+
+        <!-- ===== Cards ===== -->
+        <HBox styleClass="feature-row" 
+            spacing="16" 
+            alignment="CENTER"
+            VBox.vgrow="NEVER">
+            
+            <padding>
+                <Insets top="28" bottom="8" left="85" right="85"/>
+            </padding>
+
+            <VBox 
+                styleClass="feature-card"
+                spacing="7" 
+                alignment="CENTER_LEFT"
+                rotate="-3.01">
+
+                <FontIcon iconLiteral="mdi2c-calendar" 
+                styleClass="feature-icon"/>
+
+                <Label text="Agendamento Fluido" 
+                    styleClass="feature-text" 
+                    wrapText="true"/>
+            </VBox>
+
+            <VBox styleClass="feature-card"
+                spacing="7" 
+                alignment="CENTER_LEFT"
+                rotate="2">
+
+                <FontIcon iconLiteral="mdi2l-lightning-bolt" 
+                styleClass="feature-icon"/>
+
+                <Label text="Foco Instantâneo" 
+                    styleClass="feature-text" 
+                    wrapText="true"/>
+            </VBox>
+        </HBox>
+
+
+        <!-- ===== Footer background ===== -->
+        <StackPane fx:id="brandDecorativeFooter" 
+                styleClass="brand-decorative-footer" 
+                alignment = "CENTER"
+                VBox.vgrow="NEVER">
+
+            <ImageView fx:id="brandBackgroundImage" 
+                    smooth="true"
+                    preserveRatio="true">
+                <image>
+                    <Image url="@../images/brand_background.jpg" 
+                        backgroundLoading="false"/>
+                    </image>
+            </ImageView>
+            <Region styleClass="brand-decorative-overlay"/>
+        </StackPane>
+    </VBox>
+
+    <!-- ===== Right panel ===== -->
+    <StackPane fx:id="formPanel" 
+            HBox.hgrow="ALWAYS" 
+            styleClass="form-panel"
+            minWidth="0"
+            alignment="TOP_CENTER">
+
+        <VBox fx:id="formContent"
+            styleClass="form-content" 
+            alignment="TOP_LEFT" 
+            spacing="16">
+
+            <padding>
+                <Insets top="40" right="45" bottom="20" left="45"/>
+            </padding>
+
+            <!-- ===== Header ===== -->
+
+            <VBox spacing="4">
+                <Label text="Junte-se ao movimento" 
+                    styleClass="form-title"/>
+
+                <Label text="Crie seu centro de produtividade profissional hoje mesmo." 
+                    styleClass="form-subtitle"/>
+            </VBox>
+
+            <!-- Name -->
+            <VBox spacing="5">
+                <Label text="NOME COMPLETO" 
+                    styleClass="field-label"/>
+
+                <HBox styleClass="input-wrapper" 
+                    alignment="CENTER_LEFT">
+
+                    <FontIcon iconLiteral="mdi2a-account-outline" 
+                        styleClass="input-icon"/>
+
+                    <TextField fx:id="nameField" 
+                            promptText="Estefânio"
+                            styleClass="input-inner" HBox.hgrow="ALWAYS"/>
+                </HBox>
+                <Label fx:id="nameErrorLabel" 
+                    styleClass="error-label" 
+                    managed="false" 
+                    visible="false"/>
+            </VBox>
+
+            <!-- Email -->
+            <VBox spacing="4">
+                <Label text="ENDEREÇO DE E-MAIL" 
+                    styleClass="field-label"/>
+
+                <HBox styleClass="input-wrapper" 
+                    alignment="CENTER_LEFT">
+
+                    <FontIcon iconLiteral="mdi2e-email-outline" 
+                            styleClass="input-icon"/>
+
+                    <TextField fx:id="emailField" 
+                            promptText="exemplo@projeto-a.com"
+                            styleClass="input-inner" HBox.hgrow="ALWAYS"/>
+                </HBox>
+                <Label fx:id="emailErrorLabel" 
+                        styleClass="error-label" 
+                        managed="false" 
+                        visible="false"/>
+            </VBox>
+
+            <!-- Password / Confirm Password -->
+            <HBox spacing="14">
+                <VBox spacing="5" 
+                    HBox.hgrow="ALWAYS">
+                    
+                    <Label text="SENHA" 
+                        styleClass="field-label"/>
+
+                    <HBox styleClass="input-wrapper" 
+                        alignment="CENTER_LEFT">
+
+                        <FontIcon iconLiteral="mdi2l-lock-outline" 
+                                styleClass="input-icon"/>
+
+                        <PasswordField fx:id="passwordField" 
+                                promptText="Senha"
+                                styleClass="input-inner" 
+                                HBox.hgrow="ALWAYS"/>
+
+                    </HBox>
+                    <Label fx:id="passwordErrorLabel" 
+                            styleClass="error-label" 
+                            managed="false" 
+                            visible="false"/>
+                </VBox>
+
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="CONFIRMAR SENHA" styleClass="field-label"/>
+
+                    <HBox styleClass="input-wrapper" 
+                        alignment="CENTER_LEFT">
+
+                        <FontIcon iconLiteral="mdi2l-lock-check-outline" 
+                                styleClass="input-icon"/>
+
+                        <PasswordField fx:id="passwordConfirmationField" 
+                                promptText="Confirmar senha"
+                                styleClass="input-inner" 
+                                HBox.hgrow="ALWAYS"/>
+                    </HBox>
+                    <Label fx:id="passwordConfirmationErrorLabel" 
+                            styleClass="error-label" 
+                            managed="false" 
+                            visible="false"/>
+                </VBox>
+            </HBox>
+
+            <!-- ===== General error ===== -->
+            <Label fx:id="generalErrorLabel" 
+                    styleClass="error-label general-error" 
+                    managed="false" 
+                    visible="false"/>
+
+            <!-- Terms -->
+            <HBox spacing="9" 
+                alignment="CENTER_LEFT">
+                <CheckBox fx:id="termsCheckBox" 
+                    styleClass="terms-checkbox"/>
+
+                <TextFlow styleClass="terms-text">
+                    <Text text="Eu concordo com os "/>
+
+                    <Hyperlink fx:id="termsLink" 
+                        text="Termos e Condições" 
+                        styleClass="inline-link"/>
+
+                    <Text text=" e com a "/>
+
+                    <Hyperlink fx:id="privacyLink" 
+                            text="Política de Privacidade" 
+                            styleClass="inline-link"/>
+
+                    <Text text="."/>
+                </TextFlow>
+            </HBox>
+
+            <!-- Primary button -->
+            <Button fx:id="signupButton" 
+                    text="Criar Conta" 
+                    styleClass="primary-button"
+                    maxWidth="Infinity" 
+                    onAction="#handleSignup"/>
+
+            <!-- Divider -->
+            <HBox alignment="CENTER" 
+                spacing="14">
+                
+                <Separator HBox.hgrow="ALWAYS"/>
+
+                <Label text="OU REGISTRE-SE COM" 
+                    styleClass="divider-label"/>
+
+                <Separator HBox.hgrow="ALWAYS"/>
+
+            </HBox>
+
+            <!-- Social login buttons -->
+            <HBox spacing="16">
+                <Button fx:id="googleLoginButton" 
+                        text="Google" 
+                        styleClass="social-button"
+                        HBox.hgrow="ALWAYS" 
+                        maxWidth="Infinity" 
+                        onAction="#handleGoogleSignup"
+                        contentDisplay="LEFT" 
+                        graphicTextGap="8">
+
+                    <graphic>
+                        <ImageView fitWidth="18" 
+                                fitHeight="18" 
+                                preserveRatio="true">
+                            <image>
+                                <Image url="@../images/google_logo.png"/>
+                            </image>
+                        </ImageView>
+                    </graphic>
+                </Button>
+
+                <Button fx:id="githubLoginButton" 
+                        text="GitHub" 
+                        styleClass="social-button"
+                        HBox.hgrow="ALWAYS" 
+                        maxWidth="Infinity" 
+                        onAction="#handleGithubSignup"
+                        contentDisplay="LEFT" 
+                        graphicTextGap="8">
+
+                    <graphic>
+                        <ImageView fitWidth="18" 
+                                fitHeight="18" 
+                                preserveRatio="true">
+                            <image>
+                                <Image url="@../images/github_logo.png"/>
+                            </image>
+                        </ImageView>
+                    </graphic>
+                </Button>
+            </HBox>
+
+            <!-- Login link -->
+            <HBox alignment="CENTER" 
+                spacing="5">
+
+                <Label text="Já tem uma conta?" 
+                    styleClass="footer-text"/>
+
+                <Hyperlink fx:id="loginLink" 
+                        text="Entrar" 
+                        styleClass="inline-link" 
+                        onAction="#handleGoToLogin"/>
+            </HBox>
+
+            <!-- Copyright -->
+            <Region VBox.vgrow="ALWAYS" 
+                minHeight="40"/>
+                
+            <HBox alignment="CENTER">
+                <Label text="© 2026 Project A. Todos os direitos reservados." 
+                    styleClass="copyright-label"/>
+            </HBox>
+        </VBox>
+    </StackPane>
+
+</HBox>

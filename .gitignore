@@ -15,7 +15,7 @@
 .env.*.local
 
 # desktop/ is the only module without its own .gitignore
-desktop/target/
+**/target/
 
 # OS
 .DS_Store
