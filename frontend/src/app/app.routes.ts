@@ -33,13 +33,12 @@ export const routes: Routes = [
     redirectTo: 'entrar',
   },
   {
+    path: 'verificar-otp',
+    loadComponent: () => import('./pages/verify-otp/verify-otp').then((m) => m.VerifyOtp),
+    title: 'Verificar OTP',
+  },
+  {
     path: '**',
     redirectTo: 'entrar',
   },
-
-  {
-    path: 'verificar-otp',
-    loadComponent: () => import('./pages/verify-otp/verify-otp').then(m => m.VerifyOtp),
-    title: 'Verificar OTP',
-  }
 ];
