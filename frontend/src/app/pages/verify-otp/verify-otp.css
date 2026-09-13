@@ -1,0 +1,51 @@
+:host {
+  display: block;
+  min-height: 100dvh;
+}
+
+.otp-shell {
+  box-shadow: 0 24px 65px -32px rgb(31 41 55 / 0.3);
+}
+
+.brand-panel {
+  background: linear-gradient(145deg, #4c9cf5 0%, #3479ef 100%);
+}
+
+.field-shell {
+  border-color: #d6dae6;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease;
+}
+
+.field-shell:hover {
+  border-color: #b9c0d0;
+}
+
+.field-shell:focus-within {
+  border-color: #3b82f6;
+  background-color: #fff;
+  box-shadow: 0 0 0 3px rgb(59 130 246 / 0.12);
+}
+
+.field-shell.field-error {
+  border-color: #f87171;
+}
+
+.field-shell.field-error:focus-within {
+  box-shadow: 0 0 0 3px rgb(248 113 113 / 0.12);
+}
+
+.error-message {
+  margin-top: 6px;
+  color: #dc2626;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+@media (max-width: 639px) {
+  .otp-shell {
+    min-height: calc(100dvh - 32px);
+  }
+}
