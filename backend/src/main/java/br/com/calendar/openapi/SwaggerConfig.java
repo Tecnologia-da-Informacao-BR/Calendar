@@ -53,6 +53,16 @@ public class SwaggerConfig {
                 .post(createOp("Create a category for the authenticated user", "201", "Created"))
                 .get(createOp("Get the authenticated user's categories", "200", "OK")));
 
+        Operation deleteCategory = createOp("Delete a category", "204", "No Content")
+                .addParametersItem(createPathParam("id", "string"))
+                .responses(new ApiResponses()
+                        .addApiResponse("204", new ApiResponse().description("No Content"))
+                        .addApiResponse("409", new ApiResponse().description("Cannot delete category with associated tasks")));
+
+        paths.addPathItem("/categories/{id}", new PathItem()
+                .patch(createOp("Update a category", "200", "OK").addParametersItem(createPathParam("id", "string")))
+                .delete(deleteCategory));
+
 
         Operation getTasks = createOp("Get tasks", "200", "OK")
                 .addParametersItem(createQueryParams("date", "string", "date"))

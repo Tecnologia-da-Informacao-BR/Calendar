@@ -66,5 +66,10 @@ public interface TaskRepository extends JpaRepository<Task, String> {
 )
 Page<Task> findTaskHistory(@Param("userId") String userId, @Param("now") Instant now, Pageable pageable);
 
-   
-}
+
+/**
+ * Checks if there are any tasks associated with a given category that have not been soft-deleted.
+ * @param categoryId
+ * @return boolean: true if there are tasks associated with the category, false otherwise
+ */
+boolean existsByCategory_IdAndDeletedAtIsNull(String categoryId);}

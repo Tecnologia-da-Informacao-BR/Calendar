@@ -1,23 +1,5 @@
 package br.com.calendar.category;
 
-import br.com.calendar.category.dto.CategoryRequestDTO;
-import br.com.calendar.category.dto.CategoryResponseDTO;
-import br.com.calendar.category.dto.CategoryUpdateDTO;
-import br.com.calendar.common.exception.ResourceNotFoundException;
-import br.com.calendar.user.User;
-import br.com.calendar.user.UserRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.access.AccessDeniedException;
-
-import java.time.Instant;
-import java.util.List;
-import java.util.Optional;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -26,6 +8,27 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.AccessDeniedException;
+
+import br.com.calendar.category.dto.CategoryRequestDTO;
+import br.com.calendar.category.dto.CategoryResponseDTO;
+import br.com.calendar.category.dto.CategoryUpdateDTO;
+import br.com.calendar.common.exception.ResourceConflictException;
+import br.com.calendar.common.exception.ResourceNotFoundException;
+import br.com.calendar.task.TaskRepository;
+import br.com.calendar.user.User;
+import br.com.calendar.user.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 class CategoryServiceTest {
@@ -41,11 +44,14 @@ class CategoryServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private TaskRepository taskRepository;
+
     private CategoryService categoryService;
 
     @BeforeEach
     void setUp() {
-        categoryService = new CategoryService(categoryRepository, categoryMapper, userRepository);
+        categoryService = new CategoryService(categoryRepository,taskRepository, categoryMapper, userRepository );
     }
 
     @Test
@@ -59,7 +65,7 @@ class CategoryServiceTest {
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         CategoryResponseDTO response = new CategoryService(
-                categoryRepository, new CategoryMapper(), userRepository)
+                categoryRepository, taskRepository, new CategoryMapper(), userRepository)
                 .createCategory(request, USER_ID);
 
         ArgumentCaptor<Category> savedCategory = ArgumentCaptor.forClass(Category.class);
@@ -137,7 +143,7 @@ class CategoryServiceTest {
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         CategoryResponseDTO response = new CategoryService(
-                categoryRepository, new CategoryMapper(), userRepository)
+                categoryRepository, taskRepository, new CategoryMapper(), userRepository)
                 .updateCategory(request, "cat_123", USER_ID);
 
         ArgumentCaptor<Category> savedCategory = ArgumentCaptor.forClass(Category.class);
@@ -195,5 +201,51 @@ class CategoryServiceTest {
                 () -> categoryService.updateCategory(request, "cat_123", USER_ID));
 
         verifyNoInteractions(categoryMapper);
+    }
+    
+    @Test
+    void deletesCategoryOwnedByUserWithoutAssociatedTasks() {
+        User owner = new User();
+        owner.setId(USER_ID);
+
+        Category category = new Category();
+        category.setId("cat_123");
+        category.setUser(owner);
+
+        when(categoryRepository.findByIdAndUser_IdAndDeletedAtIsNull("cat_123", USER_ID))
+                .thenReturn(Optional.of(category));
+        when(taskRepository.existsByCategory_IdAndDeletedAtIsNull("cat_123")).thenReturn(false);
+
+        categoryService.deleteCategory("cat_123", USER_ID);
+
+        verify(categoryRepository).delete(category);
+    }
+
+    @Test
+    void doesNotDeleteCategoryWithAssociatedTasks() {
+        User owner = new User();
+        owner.setId(USER_ID);
+
+        Category category = new Category();
+        category.setId("cat_123");
+        category.setUser(owner);
+
+        when(categoryRepository.findByIdAndUser_IdAndDeletedAtIsNull("cat_123", USER_ID))
+                .thenReturn(Optional.of(category));
+        when(taskRepository.existsByCategory_IdAndDeletedAtIsNull("cat_123")).thenReturn(true);
+
+        IllegalStateException exception = assertThrows(ResourceConflictException.class,
+                () -> categoryService.deleteCategory("cat_123", USER_ID));
+
+        assertEquals("Cannot delete category with associated tasks", exception.getMessage());
+    }
+
+    @Test
+    void doesNotDeleteCategoryOwnedByAnotherUser() {
+        when(categoryRepository.findByIdAndUser_IdAndDeletedAtIsNull("cat_123", USER_ID))
+                .thenReturn(Optional.empty());
+
+        assertThrows(AccessDeniedException.class,
+                () -> categoryService.deleteCategory("cat_123", USER_ID));
     }
 }

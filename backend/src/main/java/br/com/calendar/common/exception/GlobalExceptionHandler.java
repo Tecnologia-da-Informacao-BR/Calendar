@@ -51,6 +51,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return handleExceptionInternal(e, problem, new HttpHeaders(), HttpStatus.NOT_FOUND, request);
     }
 
+    @ExceptionHandler(ResourceConflictException.class)
+    public ResponseEntity<Object> handleResourceConflictException(ResourceConflictException e, WebRequest request) {
+        log.error("Resource conflict", e);
+
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
+        return handleExceptionInternal(e, problem, new HttpHeaders(), HttpStatus.CONFLICT, request);
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Object> handleAccessDeniedException(AccessDeniedException e, WebRequest request) {
         log.error("Access denied", e);

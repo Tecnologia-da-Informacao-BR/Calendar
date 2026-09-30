@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -48,6 +49,14 @@ public class CategoryController {
             Authentication authentication) {
         String userId = authenticatedUserId(authentication);
         return ResponseEntity.ok(categoryService.updateCategory(request, id, userId));
+    }
+    
+    // Delete category endpoint. It checks if the category has any associated tasks before deleting it, if it does, block the deletion.
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteCategory(@PathVariable String id, Authentication authentication) {
+        String userId = authenticatedUserId(authentication);
+        categoryService.deleteCategory(id, userId);
+        return ResponseEntity.noContent().build();
     }
 
     private String authenticatedUserId(Authentication authentication) {
