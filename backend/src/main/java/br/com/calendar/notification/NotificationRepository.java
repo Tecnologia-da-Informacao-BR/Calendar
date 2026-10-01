@@ -5,7 +5,11 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+
 public interface NotificationRepository extends JpaRepository<Notification, String> {
+
+    List<Notification> findAllByUser_IdOrderByCreatedAtDesc(String userId);
 
     boolean existsByIdAndUser_Id(String notificationId, String userId);
 
