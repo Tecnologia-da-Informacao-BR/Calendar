@@ -16,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import br.com.calendar.category.Category;
 import br.com.calendar.category.CategoryService;
@@ -59,6 +60,19 @@ public class TaskService {
         var startOfDay = date.atStartOfDay().toInstant(ZoneOffset.UTC);
         var endOfDay = date.atTime(LocalTime.MAX).toInstant(ZoneOffset.UTC);
         return repository.findActiveTasksForDay(userId, startOfDay, endOfDay).stream()
+                .map(taskMapper::toResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<TaskResponseDTO> searchTasks(String keyword) {
+        String trimmedKeyword = keyword == null ? "" : keyword.trim();
+        if (trimmedKeyword.isBlank()) {
+            throw new IllegalArgumentException("Keyword is required.");
+        }
+
+        String userId = currentUser().getId();
+        return repository.searchActiveTasksByTitle(userId, trimmedKeyword).stream()
                 .map(taskMapper::toResponse)
                 .toList();
     }

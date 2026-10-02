@@ -43,6 +43,11 @@ public class TaskController {
         return ResponseEntity.ok(service.getTasksForDay(date));
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<List<TaskResponseDTO>> searchTasks(@RequestParam("keyword") String keyword) {
+        return ResponseEntity.ok(service.searchTasks(keyword));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTask(@PathVariable String id) {
         service.deleteTask(id);
