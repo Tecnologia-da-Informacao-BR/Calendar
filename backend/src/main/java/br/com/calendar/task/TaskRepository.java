@@ -17,6 +17,14 @@ public interface TaskRepository extends JpaRepository<Task, String> {
 
     List<Task> findAllByUser_Id(String userId);
 
+    // POSITION treats the keyword literally, including % and _.
+    @Query(value = """
+            SELECT t.* FROM task t
+            WHERE t.user_id = :userId AND t.deleted_at IS NULL
+              AND POSITION(LOWER(unaccent(:keyword)) IN LOWER(unaccent(t.title))) > 0
+            """, nativeQuery = true)
+    List<Task> searchActiveTasksByTitle(@Param("userId") String userId, @Param("keyword") String keyword);
+
 
     @Query("SELECT t FROM Task t" +
             " WHERE t.user.id = :userId AND t.deletedAt IS NULL AND t.startsAt BETWEEN :start AND :end" +
