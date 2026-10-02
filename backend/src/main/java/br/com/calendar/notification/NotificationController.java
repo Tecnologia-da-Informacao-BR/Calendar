@@ -1,14 +1,18 @@
 package br.com.calendar.notification;
 
 import br.com.calendar.notification.dto.NotificationReadResponse;
+import br.com.calendar.notification.dto.NotificationResponseDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/notifications")
@@ -18,6 +22,11 @@ public class NotificationController {
 
     public NotificationController(NotificationService notificationService) {
         this.notificationService = notificationService;
+    }
+
+    @GetMapping
+    public ResponseEntity<List<NotificationResponseDTO>> getNotifications(Authentication authentication) {
+        return ResponseEntity.ok(notificationService.getNotifications(authenticatedUserId(authentication)));
     }
 
     @PatchMapping("/read-all")

@@ -2,6 +2,8 @@ package br.com.calendar.notification;
 
 import br.com.calendar.common.exception.ResourceNotFoundException;
 import br.com.calendar.notification.dto.NotificationReadResponse;
+import br.com.calendar.notification.dto.NotificationResponseDTO;
+import br.com.calendar.task.Task;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -9,9 +11,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import java.time.Instant;
+import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
 class NotificationServiceTest {
@@ -27,6 +33,25 @@ class NotificationServiceTest {
     @BeforeEach
     void setUp() {
         notificationService = new NotificationService(notificationRepository);
+    }
+
+    @Test
+    void returnsUserNotificationsMappedInRepositoryOrder() {
+        Notification newest = notification("notification_new", Instant.parse("2026-10-01T19:45:00Z"), false, "task_new");
+        Notification oldest = notification("notification_old", Instant.parse("2026-10-01T18:45:00Z"), true, null);
+        when(notificationRepository.findAllByUser_IdOrderByCreatedAtDesc(USER_ID))
+                .thenReturn(List.of(newest, oldest));
+
+        List<NotificationResponseDTO> response = notificationService.getNotifications(USER_ID);
+
+        assertEquals(2, response.size());
+        assertEquals("notification_new", response.get(0).id());
+        assertEquals("task_new", response.get(0).taskId());
+        assertEquals(false, response.get(0).read());
+        assertEquals("notification_old", response.get(1).id());
+        assertEquals(true, response.get(1).read());
+        assertNull(response.get(1).taskId());
+        verify(notificationRepository).findAllByUser_IdOrderByCreatedAtDesc(USER_ID);
     }
 
     @Test
@@ -66,5 +91,20 @@ class NotificationServiceTest {
 
         assertEquals(3, response.count());
         verify(notificationRepository).markAllUnreadAsRead(USER_ID);
+    }
+
+    private Notification notification(String id, Instant createdAt, boolean read, String taskId) {
+        Notification notification = new Notification();
+        notification.setId(id);
+        notification.setCreatedAt(createdAt);
+        notification.setRead(read);
+
+        if (taskId != null) {
+            Task task = new Task();
+            task.setId(taskId);
+            notification.setTask(task);
+        }
+
+        return notification;
     }
 }
