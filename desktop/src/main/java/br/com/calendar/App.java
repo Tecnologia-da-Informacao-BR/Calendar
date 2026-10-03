@@ -8,7 +8,7 @@ public class App extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         SceneManager.init(primaryStage);
-        SceneManager.navigate("/signup");
+        SceneManager.navigate("/verify-otp");
         
         primaryStage.setTitle("Project A - Agenda Mensal");
         primaryStage.setWidth(1100);

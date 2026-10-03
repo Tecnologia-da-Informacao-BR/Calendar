@@ -26,6 +26,11 @@ public class SceneManager {
             "/br/com/calendar/views/LoginView.fxml",
             "/br/com/calendar/css/auth.css"
         ));
+
+        ROUTES.put("/verify-otp", new RouteConfig(
+            "/br/com/calendar/views/VerifyOTP.fxml",
+            "/br/com/calendar/css/auth.css"
+        ));
             
         
     }
