@@ -19,7 +19,7 @@
 
 <StackPane xmlns="http://javafx.com/javafx"
         xmlns:fx="http://javafx.com/fxml"
-        fx:controller="br.com.calendar.controllers.LoginController"
+        fx:controller="br.com.calendar.controllers.VerifyOtpController"
         fx:id="root"
         prefWidth="1280"
         prefHeight="1024"
@@ -29,7 +29,7 @@
         <Insets top="40" right="40" bottom="40" left="40"/>
     </padding>
 
-    <HBox fx:id="loginCard" 
+    <HBox fx:id="otpCard" 
         styleClass="login-card"
         prefWidth="1200"
         prefHeight="648"
@@ -182,26 +182,27 @@
 
                     <HBox alignment="CENTER" spacing="5">
 
+                    <padding>
+                        <Insets top="12" right="0" bottom="0" left="0"/>
+                    </padding>
+
                         <Label text="Lembrou sua senha?" 
                             styleClass="footer-text" 
-                            HBox.hgrow="ALWAYS"
-                            maxWidth="Infinity"/>
+                            HBox.hgrow="ALWAYS"/>
 
                         <Hyperlink fx:id="loginLink" 
                             text="Voltar para o login" 
                             styleClass="inline-link"
                             onAction="#handleGoToLogin"/>
 
-
-                        <Hyperlink fx:id="forgotPasswordLink" 
-                            text="Esqueceu a senha?"
-                            styleClass="inline-link" 
-                            onAction="#handleGoToForgotPassword"/>
-
                     </HBox>
 
                     <HBox alignment="CENTER" 
                         spacing="5">
+
+                        <padding>
+                        <Insets top="12" right="0" bottom="0" left="0"/>
+                    </padding>
 
                         <Label text="Quer redefinir a senha?" 
                             styleClass="footer-text"/>
@@ -218,7 +219,7 @@
                 <HBox alignment="CENTER">
 
                     <padding>
-                        <Insets top="0" right="0" bottom="20" left="0"/>
+                        <Insets top="120" right="0" bottom="0" left="0"/>
                     </padding>
 
                     <Label text="© 2026 Project A. Gestão profissional de horários." 
