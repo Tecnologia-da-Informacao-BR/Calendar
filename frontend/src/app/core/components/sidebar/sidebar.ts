@@ -1,16 +1,17 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-
-type SidebarIcon = 'dashboard' | 'calendar' | 'upcoming' | 'history' | 'settings';
+import { AppIconComponent } from '../../../shared/components/icon/icon';
+import type { AppIconName } from '../../../shared/components/icon/icon.types';
 
 interface SidebarNavItem {
   id: string;
   label: string;
-  icon: SidebarIcon;
+  icon: AppIconName;
 }
 
 interface SidebarUtilityItem {
   id: string;
   label: string;
+  icon: AppIconName;
 }
 
 interface SidebarUser {
@@ -22,6 +23,7 @@ interface SidebarUser {
 @Component({
   selector: 'app-sidebar',
   standalone: true,
+  imports: [AppIconComponent],
   templateUrl: './sidebar.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -35,8 +37,8 @@ export class Sidebar {
   ];
 
   protected readonly utilityItems: SidebarUtilityItem[] = [
-    { id: 'study-planner', label: 'Planejador de Estudos' },
-    { id: 'sharing', label: 'Compartilhamento' },
+    { id: 'study-planner', label: 'Planejador de Estudos', icon: 'study-planner' },
+    { id: 'sharing', label: 'Compartilhamento', icon: 'sharing' },
   ];
 
   protected readonly user: SidebarUser = {
