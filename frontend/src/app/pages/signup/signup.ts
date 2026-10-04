@@ -10,6 +10,7 @@ import {
 } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { PASSWORD_VALIDATORS } from '../../shared/validators/password';
+import { AppIconComponent } from '../../shared/components/icon/icon';
 
 export type SignupField = 'name' | 'email' | 'password' | 'password_confirmation' | 'terms';
 
@@ -43,7 +44,7 @@ function passwordsMatchValidator(): ValidatorFn {
 @Component({
   selector: 'app-signup',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, AppIconComponent],
   templateUrl: './signup.html',
   styleUrl: './signup.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

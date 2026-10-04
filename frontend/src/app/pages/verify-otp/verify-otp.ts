@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { AppIconComponent } from '../../shared/components/icon/icon';
 
 /** Regex that accepts exactly 6 digits. */
 const OTP_PATTERN = /^\d{6}$/;
@@ -10,7 +11,7 @@ type OtpField = 'otp';
 @Component({
   selector: 'app-verify-otp',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, AppIconComponent],
   templateUrl: './verify-otp.html',
   styleUrl: './verify-otp.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

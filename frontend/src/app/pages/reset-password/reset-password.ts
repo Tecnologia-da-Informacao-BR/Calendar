@@ -9,6 +9,7 @@ import {
 } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { PASSWORD_VALIDATORS } from '../../shared/validators/password';
+import { AppIconComponent } from '../../shared/components/icon/icon';
 type ResetPasswordField = 'password' | 'password_confirmation';
 function passwordsMatchValidator(): ValidatorFn {
   return (group: AbstractControl): ValidationErrors | null => {
@@ -26,7 +27,7 @@ function passwordsMatchValidator(): ValidatorFn {
 @Component({
   selector: 'app-reset-password',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, AppIconComponent],
   templateUrl: './reset-password.html',
   styleUrl: './reset-password.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

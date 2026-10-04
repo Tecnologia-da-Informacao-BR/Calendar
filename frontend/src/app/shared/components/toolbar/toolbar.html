@@ -1,7 +1,7 @@
 <header class="flex items-center justify-between px-6 py-3 bg-white border-b border-gray-200">
   <!-- Search input -->
   <div class="flex items-center px-4 py-2 border border-gray-300 rounded-full w-64 bg-white">
-    <svg lucideSearch class="w-4 h-4 text-gray-400 mr-2 shrink-0"></svg>
+    <app-icon name="search" [size]="16" class="text-gray-400 mr-2 shrink-0" />
     <input
       type="text"
       placeholder="Buscar eventos..."
@@ -24,7 +24,7 @@
       aria-label="Período anterior"
       class="text-gray-500 hover:text-gray-800 transition-colors"
     >
-      <svg lucideChevronLeft class="w-4 h-4"></svg>
+      <app-icon name="chevron-left" [size]="16" />
     </button>
 
     <!-- Today button -->
@@ -40,7 +40,7 @@
       aria-label="Próximo período"
       class="text-gray-500 hover:text-gray-800 transition-colors"
     >
-      <svg lucideChevronRight class="w-4 h-4"></svg>
+      <app-icon name="chevron-right" [size]="16" />
     </button>
 
     <!-- Current month/year label -->
@@ -57,7 +57,7 @@
       aria-label="Notificações"
       class="text-gray-500 hover:text-gray-800 transition-colors"
     >
-      <svg lucideBell class="w-5 h-5"></svg>
+      <app-icon name="bell" [size]="20" />
     </button>
 
     <button
@@ -65,7 +65,7 @@
       aria-label="Calendário"
       class="text-gray-500 hover:text-gray-800 transition-colors"
     >
-      <svg lucideCalendar class="w-5 h-5"></svg>
+      <app-icon name="calendar" [size]="20" />
     </button>
   </div>
 </header>

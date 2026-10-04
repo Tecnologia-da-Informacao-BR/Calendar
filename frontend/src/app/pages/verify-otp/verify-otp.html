@@ -15,16 +15,7 @@
             class="flex h-12 w-12 items-center justify-center rounded-xl border border-white/30 bg-white/15 shadow-lg"
             aria-hidden="true"
           >
-            <svg
-              class="h-6 w-6"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              viewBox="0 0 24 24"
-            >
-              <rect width="18" height="18" x="3" y="4" rx="2" />
-              <path d="M3 10h18M8 2v4M16 2v4" />
-            </svg>
+            <app-icon name="calendar" [size]="24" />
           </span>
           <span class="text-2xl font-bold">Project A</span>
         </a>
@@ -46,16 +37,7 @@
           class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white text-[#3b82f6]"
           aria-hidden="true"
         >
-          <svg
-            class="h-6 w-6"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            viewBox="0 0 24 24"
-          >
-            <rect width="20" height="16" x="2" y="4" rx="2" />
-            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-          </svg>
+          <app-icon name="mail" [size]="24" />
         </span>
         <div>
           <p class="text-xs font-semibold uppercase tracking-[0.14em] text-white/75">
@@ -74,16 +56,7 @@
           class="flex h-10 w-10 items-center justify-center rounded-xl bg-[#3b82f6] text-white"
           aria-hidden="true"
         >
-          <svg
-            class="h-5 w-5"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-          >
-            <rect width="18" height="18" x="3" y="4" rx="2" />
-            <path d="M3 10h18M8 2v4M16 2v4" />
-          </svg>
+          <app-icon name="calendar" [size]="20" />
         </span>
         <span class="text-xl font-bold">Project A</span>
       </div>
@@ -122,17 +95,7 @@
                 showError('otp', 'pattern')
               "
             >
-              <svg
-                class="h-5 w-5 shrink-0 text-gray-500"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <rect width="20" height="16" x="2" y="4" rx="2" />
-                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-              </svg>
+              <app-icon name="mail" [size]="20" class="shrink-0 text-gray-500" />
               <input
                 id="otp"
                 type="text"

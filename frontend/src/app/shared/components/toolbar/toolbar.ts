@@ -1,16 +1,10 @@
 import { Component } from '@angular/core';
-import {
-  LucideCalendar,
-  LucideBell,
-  LucideSearch,
-  LucideChevronLeft,
-  LucideChevronRight,
-} from '@lucide/angular';
+import { AppIconComponent } from '../icon/icon';
 
 @Component({
   selector: 'app-toolbar',
   standalone: true,
-  imports: [LucideCalendar, LucideBell, LucideSearch, LucideChevronLeft, LucideChevronRight],
+  imports: [AppIconComponent],
   templateUrl: './toolbar.html',
 })
 export class ToolbarComponent {}
