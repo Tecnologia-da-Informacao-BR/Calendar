@@ -27,7 +27,7 @@ public class SceneManager {
             "/br/com/calendar/css/auth.css"
         ));
 
-        ROUTES.put("/verify-otp", new RouteConfig(
+        ROUTES.put("/verificar-otp", new RouteConfig(
             "/br/com/calendar/views/VerifyOTP.fxml",
             "/br/com/calendar/css/auth.css"
         ));

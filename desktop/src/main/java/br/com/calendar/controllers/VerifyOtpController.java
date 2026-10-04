@@ -54,7 +54,7 @@ public class VerifyOtpController {
     }
 
     @FXML private void handleGoToResetPassword() {
-        SceneManager.navigate("/reset-password");
+        SceneManager.navigate("/resetar-senha");
     }
 
 }
