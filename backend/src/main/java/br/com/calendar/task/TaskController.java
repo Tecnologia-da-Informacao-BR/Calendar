@@ -48,6 +48,12 @@ public class TaskController {
         return ResponseEntity.ok(service.searchTasks(keyword));
     }
 
+    @GetMapping("/upcoming")
+    public ResponseEntity<List<TaskResponseDTO>> getUpcomingTasks(
+            @RequestParam(name = "limit", defaultValue = "20") int limit) {
+        return ResponseEntity.ok(service.getUpcomingTasks(limit));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTask(@PathVariable String id) {
         service.deleteTask(id);

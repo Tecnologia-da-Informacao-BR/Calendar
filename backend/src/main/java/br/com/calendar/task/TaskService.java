@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Objects;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -73,6 +74,24 @@ public class TaskService {
 
         String userId = currentUser().getId();
         return repository.searchActiveTasksByTitle(userId, trimmedKeyword).stream()
+                .map(taskMapper::toResponse)
+                .toList();
+    }
+
+    /**
+     * Returns incomplete, non-deleted tasks whose persisted startsAt is at or
+     * after Instant.now(), comparing absolute instants (UTC). Task.timezone
+     * does not shift this comparison. Recurrences are not expanded.
+     */
+    @Transactional(readOnly = true)
+    public List<TaskResponseDTO> getUpcomingTasks(int limit) {
+        if (limit <= 0) {
+            throw new IllegalArgumentException("Limit must be greater than zero.");
+        }
+
+        String userId = currentUser().getId();
+        Instant now = Instant.now();
+        return repository.findUpcomingTasks(userId, now, PageRequest.of(0, limit)).stream()
                 .map(taskMapper::toResponse)
                 .toList();
     }

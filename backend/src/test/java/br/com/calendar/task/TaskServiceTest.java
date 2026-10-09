@@ -10,9 +10,12 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -24,6 +27,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -503,6 +507,37 @@ class TaskServiceTest {
 
         assertEquals(1, result.size());
         verify(repository).findActiveTasksForDay(eq(USER_ID), any(), any());
+    }
+
+    @Test
+    void getUpcomingTasks_UsesCurrentUserNowAndRequestedLimit() {
+        mockAuthenticatedUser(userWithId(USER_ID));
+        Task task = new Task();
+        TaskResponseDTO response = TaskResponseDTO.builder().id(TASK_ID).build();
+        when(repository.findUpcomingTasks(eq(USER_ID), any(), any())).thenReturn(List.of(task));
+        when(taskMapper.toResponse(task)).thenReturn(response);
+
+        Instant before = Instant.now();
+        List<TaskResponseDTO> result = taskService.getUpcomingTasks(7);
+        Instant after = Instant.now();
+
+        assertEquals(List.of(response), result);
+        ArgumentCaptor<Instant> nowCaptor = ArgumentCaptor.forClass(Instant.class);
+        ArgumentCaptor<Pageable> pageCaptor = ArgumentCaptor.forClass(Pageable.class);
+        verify(repository).findUpcomingTasks(eq(USER_ID), nowCaptor.capture(), pageCaptor.capture());
+        assertTrue(!nowCaptor.getValue().isBefore(before) && !nowCaptor.getValue().isAfter(after));
+        assertEquals(0, pageCaptor.getValue().getPageNumber());
+        assertEquals(7, pageCaptor.getValue().getPageSize());
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {0, -1, Integer.MIN_VALUE})
+    void getUpcomingTasks_InvalidLimit_ThrowsIllegalArgumentException(int limit) {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> taskService.getUpcomingTasks(limit));
+
+        assertEquals("Limit must be greater than zero.", exception.getMessage());
+        verifyNoInteractions(repository, userRepository, taskMapper);
     }
     
     @Test
