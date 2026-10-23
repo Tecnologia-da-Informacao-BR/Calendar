@@ -52,3 +52,4 @@ Os colaboradores serão adicionados aqui após o primeiro Pull Request aceito.
 | Marcelo Luiz Pinotti da Silva Junior | Backend & CI    | https://www.linkedin.com/in/marcelo-pinotti/ |
 | Murilo Souza C                       | Frontend Angular | https://github.com/murilotecoteco |
 | Wendy Oliveira Konrath               | Backend         | https://www.linkedin.com/in/wendykonrath/ |
+| Zeneilton Granja                     | Angular          | https://www.linkedin.com/in/zeneiltongranja/ |
