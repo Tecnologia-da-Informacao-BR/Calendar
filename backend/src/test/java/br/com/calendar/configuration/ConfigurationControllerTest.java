@@ -4,6 +4,7 @@ import br.com.calendar.auth.JwtUtil;
 import br.com.calendar.auth.TokenBlacklist;
 import br.com.calendar.config.SecurityConfig;
 import br.com.calendar.configuration.dto.ConfigurationResponseDTO;
+import br.com.calendar.configuration.dto.UpdateConfigurationDTO;
 import jakarta.servlet.Filter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,9 +19,13 @@ import org.springframework.web.context.WebApplicationContext;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 @WebMvcTest(ConfigurationController.class)
 @Import(SecurityConfig.class)
@@ -86,5 +91,94 @@ class ConfigurationControllerTest {
                 .andExpect(status().isUnauthorized());
 
         verifyNoInteractions(configurationService);
+    }
+
+    @Test
+    void updatesTheAuthenticatedUsersConfiguration() throws Exception {
+        authenticate();
+        ConfigurationResponseDTO updated = new ConfigurationResponseDTO(
+                USER_ID,
+                "en-US",
+                Theme.dark,
+                TimeFormat.h12,
+                (short) 7,
+                DefaultView.week,
+                null,
+                null);
+        when(configurationService.updateConfiguration(eq(USER_ID), any(UpdateConfigurationDTO.class)))
+                .thenReturn(updated);
+
+        mockMvc.perform(patch("/configuration")
+                        .header("Authorization", "Bearer " + TOKEN)
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "language": "en-US",
+                                  "theme": "dark",
+                                  "timeFormat": "h12",
+                                  "weekStartDay": 7,
+                                  "defaultView": "week"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.userId").value(USER_ID))
+                .andExpect(jsonPath("$.language").value("en-US"))
+                .andExpect(jsonPath("$.theme").value("dark"))
+                .andExpect(jsonPath("$.timeFormat").value("h12"))
+                .andExpect(jsonPath("$.weekStartDay").value(7))
+                .andExpect(jsonPath("$.defaultView").value("week"));
+
+        verify(configurationService).updateConfiguration(eq(USER_ID), any(UpdateConfigurationDTO.class));
+    }
+
+    @Test
+    void returns400ForInvalidConfigurationValues() throws Exception {
+        authenticate();
+
+        mockMvc.perform(patch("/configuration")
+                        .header("Authorization", "Bearer " + TOKEN)
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {"theme": "blue"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400));
+
+        verifyNoInteractions(configurationService);
+    }
+
+    @Test
+    void returns400ForOutOfRangeWeekStartDay() throws Exception {
+        authenticate();
+
+        mockMvc.perform(patch("/configuration")
+                        .header("Authorization", "Bearer " + TOKEN)
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {"weekStartDay": 8}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("Invalid fields"))
+                .andExpect(jsonPath("$.fields.weekStartDay").exists());
+
+        verifyNoInteractions(configurationService);
+    }
+
+    @Test
+    void returns401WhenPatchIsNotAuthenticated() throws Exception {
+        mockMvc.perform(patch("/configuration")
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {"theme": "dark"}
+                                """))
+                .andExpect(status().isUnauthorized());
+
+        verifyNoInteractions(configurationService);
+    }
+
+    private void authenticate() {
+        when(jwtUtil.extractUserId(TOKEN)).thenReturn(USER_ID);
+        when(jwtUtil.isExpired(TOKEN)).thenReturn(false);
+        when(tokenBlacklist.isRevoked(TOKEN)).thenReturn(false);
     }
 }
