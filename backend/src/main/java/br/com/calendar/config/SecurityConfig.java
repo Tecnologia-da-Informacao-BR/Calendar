@@ -36,9 +36,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/auth/login", "/auth/signup",
                                 "/auth/forgot-password", "/auth/verify-otp", "/auth/reset-password",
                                 "/auth/confirm-email").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
                         .requestMatchers(
-
-                                "/actuator/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html").permitAll()
