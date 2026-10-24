@@ -1,8 +1,9 @@
 package br.com.calendar.configuration;
 
-import br.com.calendar.common.exception.ResourceNotFoundException;
 import br.com.calendar.configuration.dto.ConfigurationResponseDTO;
+import br.com.calendar.configuration.dto.UpdateConfigurationDTO;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 
 @Service
@@ -24,6 +25,11 @@ public class ConfigurationService {
     }
 
     public ConfigurationResponseDTO createDefaultConfiguration(String userId) {
+        Configuration saved = configurationRepository.save(defaultConfiguration(userId));
+        return configurationMapper.toResponse(saved);
+    }
+
+    private Configuration defaultConfiguration(String userId) {
         Configuration configuration = new Configuration();
         configuration.setId(userId);
         configuration.setLanguage(DEFAULT_LANGUAGE);
@@ -31,9 +37,7 @@ public class ConfigurationService {
         configuration.setTimeFormat(DEFAULT_TIME_FORMAT);
         configuration.setWeekStartDay(DEFAULT_WEEK_START_DAY);
         configuration.setDefaultView(DEFAULT_VIEW);
-
-        Configuration saved = configurationRepository.save(configuration);
-        return configurationMapper.toResponse(saved);
+        return configuration;
     }
 
     public ConfigurationResponseDTO getDefaultConfiguration(String userId) {
@@ -41,5 +45,29 @@ public class ConfigurationService {
 
         return configuration.map(configurationMapper::toResponse)
                 .orElseGet(() -> createDefaultConfiguration(userId));
+    }
+
+    @Transactional
+    public ConfigurationResponseDTO updateConfiguration(String userId, UpdateConfigurationDTO request) {
+        Configuration configuration = configurationRepository.findById(userId)
+                .orElseGet(() -> defaultConfiguration(userId));
+
+        if (request.language() != null) {
+            configuration.setLanguage(request.language());
+        }
+        if (request.theme() != null) {
+            configuration.setTheme(request.theme());
+        }
+        if (request.timeFormat() != null) {
+            configuration.setTimeFormat(request.timeFormat());
+        }
+        if (request.weekStartDay() != null) {
+            configuration.setWeekStartDay(request.weekStartDay());
+        }
+        if (request.defaultView() != null) {
+            configuration.setDefaultView(request.defaultView());
+        }
+
+        return configurationMapper.toResponse(configurationRepository.save(configuration));
     }
 }
