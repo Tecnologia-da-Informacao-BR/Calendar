@@ -8,13 +8,25 @@ import br.com.calendar.task.dto.TaskResponseDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
+import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ProblemDetail;
+import org.springframework.http.converter.json.ProblemDetailJacksonMixin;
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.security.access.AccessDeniedException;
 import tools.jackson.core.JsonGenerator;
@@ -48,6 +60,7 @@ class TaskControllerTest {
     @BeforeEach
     void setUp() {
         JsonMapper mapper = JsonMapper.builder()
+                .addMixIn(ProblemDetail.class, ProblemDetailJacksonMixin.class)
                 .addModule(new SimpleModule().addSerializer(Page.class, new StdSerializer<>(Page.class) {
                     @Override
                     public void serialize(Page value, JsonGenerator gen, SerializationContext ctxt) {
@@ -231,5 +244,129 @@ class TaskControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value("task1"))
                 .andExpect(jsonPath("$.title").value("Patched Task"));
+    }
+
+    @Test
+    void patchTask_OmittedReminder_IsMarkedAsAbsent() throws Exception {
+        mockMvc.perform(patch("/tasks/task1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"title": "Updated title"}
+                                """))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<TaskRequestDTO> captor =
+                ArgumentCaptor.forClass(TaskRequestDTO.class);
+
+        verify(taskService).updateTask(captor.capture(), eq("task1"));
+
+        TaskRequestDTO request = captor.getValue();
+
+        assertFalse(request.isReminderMinutesBeforePresent());
+        assertNull(request.getReminderMinutesBefore());
+    }
+
+    @Test
+    void patchTask_ExplicitNullReminder_IsMarkedAsPresent() throws Exception {
+        mockMvc.perform(patch("/tasks/task1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"reminderMinutesBefore": null}
+                                """))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<TaskRequestDTO> captor =
+                ArgumentCaptor.forClass(TaskRequestDTO.class);
+
+        verify(taskService).updateTask(captor.capture(), eq("task1"));
+
+        TaskRequestDTO request = captor.getValue();
+
+        assertTrue(request.isReminderMinutesBeforePresent());
+        assertNull(request.getReminderMinutesBefore());
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "POST, /tasks, -1",
+            "POST, /tasks, 525601",
+            "PUT, /tasks/task1, -1",
+            "PUT, /tasks/task1, 525601",
+            "PATCH, /tasks/task1, -1",
+            "PATCH, /tasks/task1, 525601"
+    })
+    void taskEndpoints_RejectInvalidReminderOffsets(
+            String method,
+            String path,
+            int reminderMinutesBefore) throws Exception {
+        String payload = """
+                {
+                    "title": "Meeting",
+                    "startsAt": "2026-11-10T18:00:00Z",
+                    "reminderMinutesBefore": %d
+                }
+                """.formatted(reminderMinutesBefore);
+
+        mockMvc.perform(request(HttpMethod.valueOf(method), path)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fields.reminderMinutesBefore").exists());
+
+        verifyNoInteractions(taskService);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "POST, /tasks, 0, 201",
+            "POST, /tasks, 525600, 201",
+            "PUT, /tasks/task1, 0, 200",
+            "PUT, /tasks/task1, 525600, 200",
+            "PATCH, /tasks/task1, 0, 200",
+            "PATCH, /tasks/task1, 525600, 200"
+    })
+    void taskEndpoints_AcceptReminderOffsetBoundaries(
+            String method,
+            String path,
+            int reminderMinutesBefore,
+            int expectedStatus) throws Exception {
+        String payload = """
+                {
+                    "title": "Meeting",
+                    "startsAt": "2026-11-10T18:00:00Z",
+                    "reminderMinutesBefore": %d
+                }
+                """.formatted(reminderMinutesBefore);
+
+        mockMvc.perform(request(HttpMethod.valueOf(method), path)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().is(expectedStatus));
+
+        ArgumentCaptor<TaskRequestDTO> captor =
+                ArgumentCaptor.forClass(TaskRequestDTO.class);
+
+        switch (method) {
+            case "POST" -> {
+                verify(taskService).createTask(captor.capture());
+            }
+            case "PUT" -> {
+                verify(taskService).replaceTask(captor.capture(), eq("task1"));
+            }
+            case "PATCH" -> {
+                verify(taskService).updateTask(captor.capture(), eq("task1"));
+            }
+            default -> {
+                throw new IllegalArgumentException("Unexpected method: " + method);
+            }
+        }
+
+        TaskRequestDTO capturedRequest = captor.getValue();
+
+        assertTrue(capturedRequest.isReminderMinutesBeforePresent());
+        assertEquals(
+                Integer.valueOf(reminderMinutesBefore),
+                capturedRequest.getReminderMinutesBefore()
+        );
     }
 }

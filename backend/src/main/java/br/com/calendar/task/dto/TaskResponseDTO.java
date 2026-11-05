@@ -44,4 +44,6 @@ public class TaskResponseDTO {
     private Instant deletedAt;
 
     private TaskPriority priority;
+
+    private Integer reminderMinutesBefore;
 }

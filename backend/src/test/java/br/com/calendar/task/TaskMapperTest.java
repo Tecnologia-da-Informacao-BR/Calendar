@@ -138,4 +138,89 @@ class TaskMapperTest {
         assertEquals(occursAt, response.getStartsAt());
         assertEquals(occursUntil, response.getEndsAt());
     }
+
+    @Test
+    void updateEntity_OmittedReminder_PreservesExistingValue() {
+        Task task = new Task();
+        task.setReminderMinutesBefore(45);
+
+        TaskRequestDTO request = new TaskRequestDTO();
+        request.setTitle("Updated title");
+
+        mapper.updateEntity(task, request);
+
+        assertEquals("Updated title", task.getTitle());
+        assertEquals(Integer.valueOf(45), task.getReminderMinutesBefore());
+    }
+
+    @Test
+    void updateEntity_ExplicitNullReminder_DisablesReminder() {
+        Task task = new Task();
+        task.setTitle("Original title");
+        task.setReminderMinutesBefore(45);
+
+        TaskRequestDTO request = new TaskRequestDTO();
+        request.setReminderMinutesBefore(null);
+
+        mapper.updateEntity(task, request);
+
+        assertNull(task.getReminderMinutesBefore());
+        assertEquals("Original title", task.getTitle());
+    }
+
+    @Test
+    void replaceEntity_OmittedReminder_DisablesReminder() {
+        Task task = new Task();
+        task.setReminderMinutesBefore(45);
+
+        mapper.replaceEntity(task, new TaskRequestDTO());
+
+        assertNull(task.getReminderMinutesBefore());
+    }
+
+    @Test
+    void toEntity_MapsReminderOffset() {
+        TaskRequestDTO request = new TaskRequestDTO();
+        request.setReminderMinutesBefore(45);
+
+        Task task = mapper.toEntity(request, null);
+
+        assertEquals(Integer.valueOf(45), task.getReminderMinutesBefore());
+    }
+
+    @Test
+    void toEntity_WithoutReminder_LeavesItDisabled() {
+        TaskRequestDTO request = new TaskRequestDTO();
+
+        Task task = mapper.toEntity(request, null);
+
+        assertNull(task.getReminderMinutesBefore());
+    }
+
+    @Test
+    void toResponse_MapsReminderOffset() {
+        Task task = new Task();
+        task.setReminderMinutesBefore(45);
+
+        TaskResponseDTO response = mapper.toResponse(task);
+
+        assertEquals(Integer.valueOf(45), response.getReminderMinutesBefore());
+    }
+
+    @Test
+    void toMonthResponse_MapsReminderOffset() {
+        Task task = new Task();
+        task.setReminderMinutesBefore(45);
+
+        Instant occurrenceStartsAt = Instant.parse("2026-11-10T18:00:00Z");
+
+        TaskMonthResponseDTO response = mapper.toMonthResponse(
+                task,
+                "task1_occurrence",
+                occurrenceStartsAt,
+                null
+        );
+
+        assertEquals(Integer.valueOf(45), response.getReminderMinutesBefore());
+    }
 }

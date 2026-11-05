@@ -24,6 +24,7 @@ import br.com.calendar.task.dto.TaskMonthResponseDTO;
 import br.com.calendar.task.dto.TaskRequestDTO;
 import br.com.calendar.task.dto.TaskResponseDTO;
 import lombok.AllArgsConstructor;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/tasks")
@@ -33,7 +34,7 @@ public class TaskController {
     private final TaskService service;
 
     @PostMapping
-    public ResponseEntity<TaskResponseDTO> createTask(@RequestBody TaskRequestDTO task) {
+    public ResponseEntity<TaskResponseDTO> createTask(@Valid @RequestBody TaskRequestDTO task) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.createTask(task));
     }
 
@@ -73,12 +74,16 @@ public class TaskController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TaskResponseDTO> replaceTask(@PathVariable String id, @RequestBody TaskRequestDTO task) {
+    public ResponseEntity<TaskResponseDTO> replaceTask(
+            @PathVariable String id,
+            @Valid @RequestBody TaskRequestDTO task) {
         return ResponseEntity.ok(service.replaceTask(task, id));
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<TaskResponseDTO> patchTask(@PathVariable String id, @RequestBody TaskRequestDTO task) {
+    public ResponseEntity<TaskResponseDTO> patchTask(
+            @PathVariable String id,
+            @Valid @RequestBody TaskRequestDTO task) {
         return ResponseEntity.ok(service.updateTask(task, id));
     }
 }

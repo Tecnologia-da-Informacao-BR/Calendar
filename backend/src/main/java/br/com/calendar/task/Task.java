@@ -70,4 +70,7 @@ public class Task extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(length = 10)
     private TaskPriority priority;
+
+    @Column(name = "reminder_minutes_before")
+    private Integer reminderMinutesBefore;
 }
