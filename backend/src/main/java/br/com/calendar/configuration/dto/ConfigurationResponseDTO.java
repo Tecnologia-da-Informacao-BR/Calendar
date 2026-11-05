@@ -13,6 +13,9 @@ public record ConfigurationResponseDTO(
         TimeFormat timeFormat,
         Short weekStartDay,
         DefaultView defaultView,
+        boolean inAppNotificationsEnabled,
+        boolean emailNotificationsEnabled,
+        boolean browserPushNotificationsEnabled,
         Instant createdAt,
         Instant updatedAt) {
 }

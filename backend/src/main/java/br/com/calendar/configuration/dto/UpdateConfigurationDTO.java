@@ -15,5 +15,8 @@ public record UpdateConfigurationDTO(
         @Min(value = 1, message = "Week start day must be between 1 and 7")
         @Max(value = 7, message = "Week start day must be between 1 and 7")
         Short weekStartDay,
-        DefaultView defaultView) {
+        DefaultView defaultView,
+        Boolean inAppNotificationsEnabled,
+        Boolean emailNotificationsEnabled,
+        Boolean browserPushNotificationsEnabled) {
 }
