@@ -68,8 +68,12 @@ class ConfigurationControllerTest {
                 TimeFormat.h24,
                 (short) 1,
                 DefaultView.month,
+                true,
+                false,
+                false,
                 null,
-                null);
+                null
+        );
 
         when(configurationService.getDefaultConfiguration(USER_ID)).thenReturn(expected);
 
@@ -80,7 +84,10 @@ class ConfigurationControllerTest {
                 .andExpect(jsonPath("$.language").value("pt-BR"))
                 .andExpect(jsonPath("$.theme").value("light"))
                 .andExpect(jsonPath("$.timeFormat").value("h24"))
-                .andExpect(jsonPath("$.weekStartDay").value(1));
+                .andExpect(jsonPath("$.weekStartDay").value(1))
+                .andExpect(jsonPath("$.inAppNotificationsEnabled").value(true))
+                .andExpect(jsonPath("$.emailNotificationsEnabled").value(false))
+                .andExpect(jsonPath("$.browserPushNotificationsEnabled").value(false));
 
         verify(configurationService).getDefaultConfiguration(USER_ID);
     }
@@ -103,8 +110,12 @@ class ConfigurationControllerTest {
                 TimeFormat.h12,
                 (short) 7,
                 DefaultView.week,
+                true,
+                false,
+                false,
                 null,
-                null);
+                null
+        );
         when(configurationService.updateConfiguration(eq(USER_ID), any(UpdateConfigurationDTO.class)))
                 .thenReturn(updated);
 

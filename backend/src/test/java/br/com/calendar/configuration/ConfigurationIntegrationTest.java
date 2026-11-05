@@ -86,6 +86,42 @@ class ConfigurationIntegrationTest {
                 "SELECT theme::text FROM configuration WHERE user_id = ?", String.class, OTHER_USER_ID));
     }
 
+    @Test
+    void emailPreferencePersistsWithoutChangingAnotherUser() throws Exception {
+        mockMvc.perform(patch("/configuration")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"emailNotificationsEnabled": true}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.emailNotificationsEnabled").value(true));
+
+        entityManager.flush();
+        entityManager.clear();
+
+        mockMvc.perform(get("/configuration")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.emailNotificationsEnabled").value(true))
+                .andExpect(jsonPath("$.inAppNotificationsEnabled").value(true))
+                .andExpect(jsonPath("$.browserPushNotificationsEnabled").value(false))
+                .andExpect(jsonPath("$.language").value("pt-BR"))
+                .andExpect(jsonPath("$.theme").value("light"));
+
+        assertEquals(Boolean.TRUE, jdbc.queryForObject(
+                "SELECT email_notifications_enabled FROM configuration WHERE user_id = ?",
+                Boolean.class,
+                USER_ID
+        ));
+
+        assertEquals(Boolean.FALSE, jdbc.queryForObject(
+                "SELECT email_notifications_enabled FROM configuration WHERE user_id = ?",
+                Boolean.class,
+                OTHER_USER_ID
+        ));
+    }
+
     private void insertConfiguration(String userId) {
         jdbc.update("""
                 INSERT INTO configuration

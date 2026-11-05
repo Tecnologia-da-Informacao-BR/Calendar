@@ -45,6 +45,8 @@ public class TaskMonthResponseDTO {
 
     private TaskPriority priority;
 
+    private Integer reminderMinutesBefore;
+
     private CategoryResponseDTO category;
 
     private Instant createdAt;

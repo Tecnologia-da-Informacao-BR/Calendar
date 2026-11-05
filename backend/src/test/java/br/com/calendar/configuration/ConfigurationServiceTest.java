@@ -8,12 +8,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -49,6 +50,9 @@ class ConfigurationServiceTest {
                 TimeFormat.h12,
                 (short) 7,
                 DefaultView.week,
+                true,
+                false,
+                false,
                 null,
                 null);
 
@@ -78,6 +82,9 @@ class ConfigurationServiceTest {
                             config.getTimeFormat(),
                             config.getWeekStartDay(),
                             config.getDefaultView(),
+                            config.isInAppNotificationsEnabled(),
+                            config.isEmailNotificationsEnabled(),
+                            config.isBrowserPushNotificationsEnabled(),
                             config.getCreatedAt(),
                             config.getUpdatedAt());
                 });
@@ -94,6 +101,12 @@ class ConfigurationServiceTest {
         assertEquals(TimeFormat.h24, capturedConfig.getTimeFormat());
         assertEquals((short) 1, capturedConfig.getWeekStartDay());
         assertEquals(DefaultView.month, capturedConfig.getDefaultView());
+        assertEquals(true, capturedConfig.isInAppNotificationsEnabled());
+        assertEquals(false, capturedConfig.isEmailNotificationsEnabled());
+        assertEquals(false, capturedConfig.isBrowserPushNotificationsEnabled());
+        assertEquals(true, response.inAppNotificationsEnabled());
+        assertEquals(false, response.emailNotificationsEnabled());
+        assertEquals(false, response.browserPushNotificationsEnabled());
 
         assertEquals("pt-BR", response.language());
         assertEquals(Theme.light, response.theme());
@@ -116,6 +129,9 @@ class ConfigurationServiceTest {
                             config.getTimeFormat(),
                             config.getWeekStartDay(),
                             config.getDefaultView(),
+                            config.isInAppNotificationsEnabled(),
+                            config.isEmailNotificationsEnabled(),
+                            config.isBrowserPushNotificationsEnabled(),
                             config.getCreatedAt(),
                             config.getUpdatedAt());
                 });
@@ -132,6 +148,12 @@ class ConfigurationServiceTest {
         assertEquals(TimeFormat.h24, capturedConfig.getTimeFormat());
         assertEquals((short) 1, capturedConfig.getWeekStartDay());
         assertEquals(DefaultView.month, capturedConfig.getDefaultView());
+        assertEquals(true, capturedConfig.isInAppNotificationsEnabled());
+        assertEquals(false, capturedConfig.isEmailNotificationsEnabled());
+        assertEquals(false, capturedConfig.isBrowserPushNotificationsEnabled());
+        assertEquals(true, response.inAppNotificationsEnabled());
+        assertEquals(false, response.emailNotificationsEnabled());
+        assertEquals(false, response.browserPushNotificationsEnabled());
 
         assertEquals("pt-BR", response.language());
         assertEquals(Theme.light, response.theme());
@@ -144,9 +166,27 @@ class ConfigurationServiceTest {
     void updatesAndPersistsAllConfigurationFields() {
         Configuration configuration = configuration();
         UpdateConfigurationDTO request = new UpdateConfigurationDTO(
-                "en-US", Theme.dark, TimeFormat.h12, (short) 7, DefaultView.week);
+                "en-US",
+                Theme.dark,
+                TimeFormat.h12,
+                (short) 7,
+                DefaultView.week,
+                null,
+                null,
+                null
+        );
         ConfigurationResponseDTO expected = new ConfigurationResponseDTO(
-                USER_ID, "en-US", Theme.dark, TimeFormat.h12, (short) 7, DefaultView.week, null, null);
+                USER_ID,
+                "en-US",
+                Theme.dark,
+                TimeFormat.h12,
+                (short) 7,
+                DefaultView.week,
+                true,
+                false,
+                false,
+                null,
+                null);
 
         when(configurationRepository.findById(USER_ID)).thenReturn(Optional.of(configuration));
         when(configurationRepository.save(configuration)).thenReturn(configuration);
@@ -167,12 +207,32 @@ class ConfigurationServiceTest {
     void partialUpdatePreservesOmittedConfigurationFields() {
         Configuration configuration = configuration();
         UpdateConfigurationDTO request = new UpdateConfigurationDTO(
-                null, Theme.dark, null, null, null);
+                null,
+                Theme.dark,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
 
         when(configurationRepository.findById(USER_ID)).thenReturn(Optional.of(configuration));
         when(configurationRepository.save(configuration)).thenReturn(configuration);
-        when(configurationMapper.toResponse(configuration)).thenReturn(new ConfigurationResponseDTO(
-                USER_ID, "pt-BR", Theme.dark, TimeFormat.h24, (short) 1, DefaultView.month, null, null));
+        when(configurationMapper.toResponse(configuration))
+                .thenReturn(new ConfigurationResponseDTO(
+                        USER_ID,
+                        "pt-BR",
+                        Theme.dark,
+                        TimeFormat.h24,
+                        (short) 1,
+                        DefaultView.month,
+                        true,
+                        false,
+                        false,
+                        null,
+                        null
+                ));
 
         configurationService.updateConfiguration(USER_ID, request);
 
@@ -187,7 +247,15 @@ class ConfigurationServiceTest {
     @Test
     void partialUpdateCreatesDefaultsWhenConfigurationDoesNotExist() {
         UpdateConfigurationDTO request = new UpdateConfigurationDTO(
-                null, Theme.dark, null, null, null);
+                null,
+                Theme.dark,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
         when(configurationRepository.findById(USER_ID)).thenReturn(Optional.empty());
         when(configurationRepository.save(any(Configuration.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -201,6 +269,9 @@ class ConfigurationServiceTest {
                             configuration.getTimeFormat(),
                             configuration.getWeekStartDay(),
                             configuration.getDefaultView(),
+                            configuration.isInAppNotificationsEnabled(),
+                            configuration.isEmailNotificationsEnabled(),
+                            configuration.isBrowserPushNotificationsEnabled(),
                             null,
                             null);
                 });
@@ -213,6 +284,142 @@ class ConfigurationServiceTest {
         assertEquals((short) 1, response.weekStartDay());
         assertEquals(DefaultView.month, response.defaultView());
         verify(configurationRepository).save(any(Configuration.class));
+    }
+
+    @Test
+    void enablesEmailNotificationsWithoutChangingOtherSettings() {
+        Configuration configuration = configuration();
+        configuration.setInAppNotificationsEnabled(false);
+        configuration.setEmailNotificationsEnabled(false);
+        configuration.setBrowserPushNotificationsEnabled(true);
+
+        UpdateConfigurationDTO request = new UpdateConfigurationDTO(
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                true,
+                null
+        );
+
+        when(configurationRepository.findById(USER_ID))
+                .thenReturn(Optional.of(configuration));
+        when(configurationRepository.save(configuration))
+                .thenReturn(configuration);
+
+        configurationService.updateConfiguration(USER_ID, request);
+
+        assertEquals(false, configuration.isInAppNotificationsEnabled());
+        assertEquals(true, configuration.isEmailNotificationsEnabled());
+        assertEquals(true, configuration.isBrowserPushNotificationsEnabled());
+
+        assertEquals("pt-BR", configuration.getLanguage());
+        assertEquals(Theme.light, configuration.getTheme());
+        assertEquals(TimeFormat.h24, configuration.getTimeFormat());
+        assertEquals((short) 1, configuration.getWeekStartDay());
+        assertEquals(DefaultView.month, configuration.getDefaultView());
+
+        verify(configurationRepository).save(configuration);
+    }
+
+    @Test
+    void disablesEmailNotificationsWithoutChangingOtherPreferences() {
+        Configuration configuration = configuration();
+        configuration.setInAppNotificationsEnabled(true);
+        configuration.setEmailNotificationsEnabled(true);
+        configuration.setBrowserPushNotificationsEnabled(true);
+
+        UpdateConfigurationDTO request = new UpdateConfigurationDTO(
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                false,
+                null
+        );
+
+        when(configurationRepository.findById(USER_ID))
+                .thenReturn(Optional.of(configuration));
+        when(configurationRepository.save(configuration))
+                .thenReturn(configuration);
+
+        configurationService.updateConfiguration(USER_ID, request);
+
+        assertEquals(true, configuration.isInAppNotificationsEnabled());
+        assertEquals(false, configuration.isEmailNotificationsEnabled());
+        assertEquals(true, configuration.isBrowserPushNotificationsEnabled());
+
+        verify(configurationRepository).save(configuration);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void updatesInAppNotificationsIndependently(boolean enabled) {
+        Configuration configuration = configuration();
+        configuration.setInAppNotificationsEnabled(!enabled);
+        configuration.setEmailNotificationsEnabled(true);
+        configuration.setBrowserPushNotificationsEnabled(true);
+
+        UpdateConfigurationDTO request = new UpdateConfigurationDTO(
+                null,
+                null,
+                null,
+                null,
+                null,
+                enabled,
+                null,
+                null
+        );
+
+        when(configurationRepository.findById(USER_ID))
+                .thenReturn(Optional.of(configuration));
+        when(configurationRepository.save(configuration))
+                .thenReturn(configuration);
+
+        configurationService.updateConfiguration(USER_ID, request);
+
+        assertEquals(enabled, configuration.isInAppNotificationsEnabled());
+        assertEquals(true, configuration.isEmailNotificationsEnabled());
+        assertEquals(true, configuration.isBrowserPushNotificationsEnabled());
+
+        verify(configurationRepository).save(configuration);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void updatesBrowserPushNotificationsIndependently(boolean enabled) {
+        Configuration configuration = configuration();
+        configuration.setInAppNotificationsEnabled(false);
+        configuration.setEmailNotificationsEnabled(true);
+        configuration.setBrowserPushNotificationsEnabled(!enabled);
+
+        UpdateConfigurationDTO request = new UpdateConfigurationDTO(
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                enabled
+        );
+
+        when(configurationRepository.findById(USER_ID))
+                .thenReturn(Optional.of(configuration));
+        when(configurationRepository.save(configuration))
+                .thenReturn(configuration);
+
+        configurationService.updateConfiguration(USER_ID, request);
+
+        assertEquals(false, configuration.isInAppNotificationsEnabled());
+        assertEquals(true, configuration.isEmailNotificationsEnabled());
+        assertEquals(enabled, configuration.isBrowserPushNotificationsEnabled());
+
+        verify(configurationRepository).save(configuration);
     }
 
     private Configuration configuration() {

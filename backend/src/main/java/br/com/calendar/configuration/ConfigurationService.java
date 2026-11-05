@@ -4,6 +4,7 @@ import br.com.calendar.configuration.dto.ConfigurationResponseDTO;
 import br.com.calendar.configuration.dto.UpdateConfigurationDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.util.Optional;
 
 @Service
@@ -19,7 +20,7 @@ public class ConfigurationService {
     private final ConfigurationMapper configurationMapper;
 
     public ConfigurationService(ConfigurationRepository configurationRepository,
-                                 ConfigurationMapper configurationMapper) {
+                                ConfigurationMapper configurationMapper) {
         this.configurationRepository = configurationRepository;
         this.configurationMapper = configurationMapper;
     }
@@ -66,6 +67,24 @@ public class ConfigurationService {
         }
         if (request.defaultView() != null) {
             configuration.setDefaultView(request.defaultView());
+        }
+
+        if (request.inAppNotificationsEnabled() != null) {
+            configuration.setInAppNotificationsEnabled(
+                    request.inAppNotificationsEnabled()
+            );
+        }
+
+        if (request.emailNotificationsEnabled() != null) {
+            configuration.setEmailNotificationsEnabled(
+                    request.emailNotificationsEnabled()
+            );
+        }
+
+        if (request.browserPushNotificationsEnabled() != null) {
+            configuration.setBrowserPushNotificationsEnabled(
+                    request.browserPushNotificationsEnabled()
+            );
         }
 
         return configurationMapper.toResponse(configurationRepository.save(configuration));

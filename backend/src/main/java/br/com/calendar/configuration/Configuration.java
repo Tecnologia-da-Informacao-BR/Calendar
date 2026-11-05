@@ -41,4 +41,14 @@ public class Configuration extends BaseEntity {
     @JdbcType(PostgreSQLEnumJdbcType.class)
     @Column(name = "default_view", columnDefinition = "view_type")
     private DefaultView defaultView;
+
+    @Column(name = "in_app_notifications_enabled", nullable = false)
+    private boolean inAppNotificationsEnabled = true;
+
+    @Column(name = "email_notifications_enabled", nullable = false)
+    private boolean emailNotificationsEnabled = false;
+
+    @Column(name = "browser_push_notifications_enabled", nullable = false)
+    private boolean browserPushNotificationsEnabled = false;
+
 }

@@ -14,6 +14,9 @@ public class ConfigurationMapper {
                 configuration.getTimeFormat(),
                 configuration.getWeekStartDay(),
                 configuration.getDefaultView(),
+                configuration.isInAppNotificationsEnabled(),
+                configuration.isEmailNotificationsEnabled(),
+                configuration.isBrowserPushNotificationsEnabled(),
                 configuration.getCreatedAt(),
                 configuration.getUpdatedAt()
         );
