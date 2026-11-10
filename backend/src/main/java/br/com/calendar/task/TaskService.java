@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import br.com.calendar.reminder.ReminderScheduleService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -37,7 +38,9 @@ public class TaskService {
     private final TaskMapper taskMapper;
     private final CategoryService categoryService;
     private final UserRepository userRepository;
+    private final ReminderScheduleService reminderScheduleService;
 
+    @Transactional
     public TaskResponseDTO createTask(TaskRequestDTO request) {
         validateRequiredFields(request);
 
@@ -53,7 +56,9 @@ public class TaskService {
 
         validateTaskDates(task);
 
-        return taskMapper.toResponse(repository.save(task));
+        Task savedTask = repository.save(task);
+        reminderScheduleService.scheduleForNewTask(savedTask);
+        return taskMapper.toResponse(savedTask);
     }
 
     public List<TaskResponseDTO> getTasksForDay(LocalDate date) {
@@ -328,5 +333,7 @@ public class TaskService {
             throw new IllegalArgumentException("Task start time must be before its end time.");
         }
     }
+
+
 
 }

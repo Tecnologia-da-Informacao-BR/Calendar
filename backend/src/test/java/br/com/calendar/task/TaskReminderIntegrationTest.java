@@ -97,6 +97,21 @@ class TaskReminderIntegrationTest {
         );
 
         assertEquals(Integer.valueOf(reminderMinutesBefore), savedOffset);
+        String reminderStatus = jdbc.queryForObject(
+                """
+                SELECT r.status
+                FROM reminder r
+                JOIN task t ON t.id = r.task_id
+                WHERE t.user_id = ?
+                  AND t.title = ?
+                  AND r.user_id = t.user_id
+                """,
+                String.class,
+                USER_ID,
+                "Meeting"
+        );
+
+        assertEquals("PENDING", reminderStatus);
     }
 
     @Test
