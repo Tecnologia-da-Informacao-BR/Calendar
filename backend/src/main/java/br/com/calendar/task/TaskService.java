@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import br.com.calendar.reminder.ReminderScheduleService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -37,7 +38,9 @@ public class TaskService {
     private final TaskMapper taskMapper;
     private final CategoryService categoryService;
     private final UserRepository userRepository;
+    private final ReminderScheduleService reminderScheduleService;
 
+    @Transactional
     public TaskResponseDTO createTask(TaskRequestDTO request) {
         validateRequiredFields(request);
 
@@ -53,7 +56,9 @@ public class TaskService {
 
         validateTaskDates(task);
 
-        return taskMapper.toResponse(repository.save(task));
+        Task savedTask = repository.save(task);
+        reminderScheduleService.scheduleForNewTask(savedTask);
+        return taskMapper.toResponse(savedTask);
     }
 
     public List<TaskResponseDTO> getTasksForDay(LocalDate date) {
@@ -221,12 +226,14 @@ public class TaskService {
         };
     }
 
+    @Transactional
     public void deleteTask(String id) {
         repository.findByIdAndDeletedAtIsNull(id).ifPresent(task -> {
             checkOwnership(task);
+            reminderScheduleService.cancelRemindersForTask(task.getId());
             repository.delete(task);
         });
-    }  
+    }
     /**
     * Returns the task history for the currently authenticated user,
     * mapped to TaskResponseDTO. Delegates the actual filtering/ordering
@@ -244,8 +251,10 @@ public class TaskService {
     /**
      * PATCH semantics: fields omitted from the request are left unchanged.
      */
+    @Transactional
     public TaskResponseDTO updateTask(TaskRequestDTO request, String taskId) {
         Task existingTask = findOwnedTask(taskId);
+        Instant previousStartsAt = existingTask.getStartsAt();
         User currentUser = currentUser();
 
         if (request.getCategoryId() != null) {
@@ -256,15 +265,19 @@ public class TaskService {
 
         validateTaskDates(existingTask);
 
-        return taskMapper.toResponse(repository.save(existingTask));
+        Task savedTask = repository.save(existingTask);
+        reminderScheduleService.synchronizeAfterTaskUpdate(savedTask, previousStartsAt);
+        return taskMapper.toResponse(savedTask);
     }
 
     /**
      * PUT semantics: full replacement. Fields omitted from the request clear
      * the corresponding value on the task, including the category.
      */
+    @Transactional
     public TaskResponseDTO replaceTask(TaskRequestDTO request, String taskId) {
         Task existingTask = findOwnedTask(taskId);
+        Instant previousStartsAt = existingTask.getStartsAt();
         User currentUser = currentUser();
 
         Category category = request.getCategoryId() != null
@@ -276,7 +289,9 @@ public class TaskService {
 
         validateTaskDates(existingTask);
 
-        return taskMapper.toResponse(repository.save(existingTask));
+        Task savedTask = repository.save(existingTask);
+        reminderScheduleService.synchronizeAfterTaskUpdate(savedTask, previousStartsAt);
+        return taskMapper.toResponse(savedTask);
     }
 
     private Task findOwnedTask(String taskId) {
@@ -328,5 +343,7 @@ public class TaskService {
             throw new IllegalArgumentException("Task start time must be before its end time.");
         }
     }
+
+
 
 }

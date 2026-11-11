@@ -11,6 +11,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import br.com.calendar.reminder.ReminderScheduleService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -57,6 +59,8 @@ class TaskServiceTest {
     private SecurityContext securityContext;
     @Mock
     private Authentication authentication;
+    @Mock
+    private ReminderScheduleService reminderScheduleService;
 
     @InjectMocks
     private TaskService taskService;
@@ -543,6 +547,7 @@ class TaskServiceTest {
     @Test
     void deleteTask_Success_WhenOwner() {
         Task existingTask = new Task();
+        existingTask.setId(TASK_ID);
         existingTask.setUser(userWithId(USER_ID));
 
         mockAuthenticatedUser(userWithId(USER_ID));
@@ -550,6 +555,7 @@ class TaskServiceTest {
 
         taskService.deleteTask(TASK_ID);
 
+        verify(reminderScheduleService).cancelRemindersForTask(TASK_ID);
         verify(repository).delete(existingTask);
     }
 
@@ -564,6 +570,7 @@ class TaskServiceTest {
         assertThrows(AccessDeniedException.class, () -> taskService.deleteTask(TASK_ID));
 
         verify(repository, never()).delete(any());
+        verify(reminderScheduleService, never()).cancelRemindersForTask(any());
     }
 
     @Test
