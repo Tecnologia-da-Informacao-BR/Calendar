@@ -64,10 +64,26 @@ public class ReminderProcessor {
                     : new ReminderProcessingResult(recovered, 0, 0, 0);
         }
 
-        Map<ReminderStatus, Integer> totals = transactionTemplate.execute(status -> resolveClaimed(claimToken, now));
-
+        ReminderProcessingResult finished = finishClaim(claimToken, now);
         return new ReminderProcessingResult(
                 recovered == null ? 0 : recovered,
+                finished.ready(),
+                finished.skipped(),
+                finished.canceled()
+        );
+    }
+
+    /**
+     * Step 3 of a run: decides the final status of the reminders claimed with
+     * {@code claimToken}. The task is read again here, so changes made after
+     * the claim (task completed or deleted, reminder disabled, start time
+     * changed) are taken into account. Rows canceled meanwhile lost their claim
+     * token and are left as they are.
+     */
+    public ReminderProcessingResult finishClaim(String claimToken, Instant now) {
+        Map<ReminderStatus, Integer> totals = transactionTemplate.execute(status -> resolveClaimed(claimToken, now));
+        return new ReminderProcessingResult(
+                0,
                 totals.getOrDefault(ReminderStatus.READY, 0),
                 totals.getOrDefault(ReminderStatus.SKIPPED, 0),
                 totals.getOrDefault(ReminderStatus.CANCELED, 0)

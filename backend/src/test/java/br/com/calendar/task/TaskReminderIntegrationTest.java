@@ -416,9 +416,9 @@ class TaskReminderIntegrationTest {
     }
 
     @Test
-    void deleteTask_KeepsProcessedReminderHistory() throws Exception {
-        String taskId = createTaskWithReminder("Already reminded meeting", 45);
-        jdbc.update("UPDATE reminder SET status = 'READY' WHERE task_id = ?", taskId);
+    void deleteTask_KeepsSkippedReminderHistory() throws Exception {
+        String taskId = createTaskWithReminder("Already skipped meeting", 45);
+        jdbc.update("UPDATE reminder SET status = 'SKIPPED' WHERE task_id = ?", taskId);
 
         mockMvc.perform(delete("/tasks/{id}", taskId)
                         .header("Authorization", "Bearer " + token))
@@ -427,7 +427,7 @@ class TaskReminderIntegrationTest {
         entityManager.flush();
         entityManager.clear();
 
-        assertEquals("READY", jdbc.queryForObject(
+        assertEquals("SKIPPED", jdbc.queryForObject(
                 "SELECT status FROM reminder WHERE task_id = ?",
                 String.class,
                 taskId

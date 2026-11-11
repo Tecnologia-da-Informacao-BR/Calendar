@@ -230,7 +230,7 @@ public class TaskService {
     public void deleteTask(String id) {
         repository.findByIdAndDeletedAtIsNull(id).ifPresent(task -> {
             checkOwnership(task);
-            reminderScheduleService.cancelPendingRemindersForTask(task.getId());
+            reminderScheduleService.cancelRemindersForTask(task.getId());
             repository.delete(task);
         });
     }

@@ -18,20 +18,45 @@ public interface ReminderRepository extends JpaRepository<Reminder, String> {
     );
 
     /**
-     * Cancels every reminder of the task that is still waiting for its
-     * scheduled time. Reminders that were already processed (READY, SKIPPED)
-     * keep their status so their history is preserved.
+     * Cancels every reminder of the task that was not delivered yet: PENDING,
+     * PROCESSING (claimed by a scheduler right now) and READY. SKIPPED and
+     * CANCELED rows keep their status so their history is preserved. Clearing
+     * the claim makes a scheduler that is processing the row lose its claim.
      */
     @Modifying(flushAutomatically = true)
     @Query(value = """
             UPDATE reminder
             SET status = 'CANCELED',
+                claim_token = NULL,
+                lease_expires_at = NULL,
                 version = version + 1,
                 updated_at = :now
             WHERE task_id = :taskId
-              AND status = 'PENDING'
+              AND status IN ('PENDING', 'PROCESSING', 'READY')
             """, nativeQuery = true)
-    int cancelPendingByTaskId(@Param("taskId") String taskId, @Param("now") Instant now);
+    int cancelActiveByTaskId(@Param("taskId") String taskId, @Param("now") Instant now);
+
+    /**
+     * Same as {@link #cancelActiveByTaskId} for a single occurrence, used when
+     * the start time changes or the reminder is disabled.
+     */
+    @Modifying(flushAutomatically = true)
+    @Query(value = """
+            UPDATE reminder
+            SET status = 'CANCELED',
+                claim_token = NULL,
+                lease_expires_at = NULL,
+                version = version + 1,
+                updated_at = :now
+            WHERE task_id = :taskId
+              AND occurrence_starts_at = :occurrenceStartsAt
+              AND status IN ('PENDING', 'PROCESSING', 'READY')
+            """, nativeQuery = true)
+    int cancelActiveByTaskIdAndOccurrence(
+            @Param("taskId") String taskId,
+            @Param("occurrenceStartsAt") Instant occurrenceStartsAt,
+            @Param("now") Instant now
+    );
 
     /**
      * Atomically claims up to {@code limit} due PENDING reminders for one
@@ -122,6 +147,8 @@ public interface ReminderRepository extends JpaRepository<Reminder, String> {
             JOIN FETCH r.task t
             WHERE r.status = br.com.calendar.reminder.ReminderStatus.READY
               AND r.occurrenceStartsAt > :now
+              AND r.occurrenceStartsAt = t.startsAt
+              AND t.reminderMinutesBefore IS NOT NULL
               AND t.deletedAt IS NULL
               AND t.completedAt IS NULL
             ORDER BY r.scheduledAt

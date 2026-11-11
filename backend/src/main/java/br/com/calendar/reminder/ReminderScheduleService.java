@@ -37,7 +37,7 @@ public class ReminderScheduleService {
             } else if (foundReminder.getStatus() == ReminderStatus.CANCELED) {
                 // The unique key (task, occurrence) allows one row per occurrence,
                 // so a reminder the user turns back on reuses its canceled row.
-                // Processed rows (READY, SKIPPED) are history and stay untouched.
+                // READY rows are already due and SKIPPED rows are history.
                 foundReminder.setStatus(ReminderStatus.PENDING);
                 foundReminder.setScheduledAt(scheduleAt);
                 reminderRepository.save(foundReminder);
@@ -52,41 +52,34 @@ public class ReminderScheduleService {
         reminderRepository.save(reminder);
     }
 
-    public void cancelPendingReminder(String taskId, Instant occurrenceStartAt) {
-
-        if (occurrenceStartAt == null) {
+    /**
+     * Cancels the reminder of one occurrence while it has not been delivered
+     * yet (PENDING, PROCESSING or READY). A single conditional UPDATE is used
+     * so a scheduler instance working on the same row at the same time can
+     * never turn it back into READY: its claim token is cleared here, and the
+     * scheduler only finishes claims whose token still matches.
+     */
+    public void cancelReminder(String taskId, Instant occurrenceStartsAt) {
+        if (occurrenceStartsAt == null) {
             return;
         }
-        Optional<Reminder> existingReminder =
-                reminderRepository.findByTask_IdAndOccurrenceStartsAt(
-                        taskId,
-                        occurrenceStartAt
-                );
-        if (existingReminder.isEmpty()) {
-            return;
-        }
-
-        Reminder foundReminder = existingReminder.get();
-
-        if (foundReminder.getStatus() == ReminderStatus.PENDING) {
-            foundReminder.setStatus(ReminderStatus.CANCELED);
-            reminderRepository.save(foundReminder);
-        }
+        reminderRepository.cancelActiveByTaskIdAndOccurrence(taskId, occurrenceStartsAt, Instant.now());
     }
 
     /**
-     * Cancels every pending reminder of the task. Called when the task is
-     * soft-deleted, in the same transaction as the deletion.
+     * Cancels every reminder of the task that has not been delivered yet.
+     * Called when the task is soft-deleted, in the same transaction as the
+     * deletion.
      */
-    public void cancelPendingRemindersForTask(String taskId) {
-        reminderRepository.cancelPendingByTaskId(taskId, Instant.now());
+    public void cancelRemindersForTask(String taskId) {
+        reminderRepository.cancelActiveByTaskId(taskId, Instant.now());
     }
 
     public void synchronizeAfterTaskUpdate(Task task, Instant previousStartsAt) {
 
         if (isFinished(task)) {
-            cancelPendingReminder(task.getId(), previousStartsAt);
-            cancelPendingReminder(task.getId(), task.getStartsAt());
+            cancelReminder(task.getId(), previousStartsAt);
+            cancelReminder(task.getId(), task.getStartsAt());
             return;
         }
 
@@ -95,7 +88,7 @@ public class ReminderScheduleService {
         boolean reminderDisabled = task.getReminderMinutesBefore() == null;
 
         if (startChanged || reminderDisabled) {
-            cancelPendingReminder(task.getId(), previousStartsAt);
+            cancelReminder(task.getId(), previousStartsAt);
         }
 
         scheduleForNewTask(task);

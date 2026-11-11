@@ -15,12 +15,17 @@ final class ReminderEligibility {
     }
 
     /**
-     * @return CANCELED when the task was deleted or completed, SKIPPED when the
-     * event already started (the event start is the cutoff, not the original
-     * reminder time) and READY otherwise.
+     * @return CANCELED when the task was deleted or completed, its reminder was
+     * disabled, or its start time changed (the reminder belongs to an outdated
+     * occurrence); SKIPPED when the event already started (the event start is
+     * the cutoff, not the original reminder time); READY otherwise.
      */
     static ReminderStatus resolve(Reminder reminder, Task task, Instant now) {
-        if (task.getDeletedAt() != null || task.getCompletedAt() != null) {
+        boolean taskFinished = task.getDeletedAt() != null || task.getCompletedAt() != null;
+        boolean reminderDisabled = task.getReminderMinutesBefore() == null;
+        boolean outdatedOccurrence = !reminder.getOccurrenceStartsAt().equals(task.getStartsAt());
+
+        if (taskFinished || reminderDisabled || outdatedOccurrence) {
             return ReminderStatus.CANCELED;
         }
         if (!now.isBefore(reminder.getOccurrenceStartsAt())) {

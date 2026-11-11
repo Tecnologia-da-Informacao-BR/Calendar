@@ -7,7 +7,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -95,27 +94,31 @@ public class ReminderScheduleServiceTest {
     }
 
     @Test
-    void cancelsExistingPendingReminder() {
+    void cancelsReminderOfOccurrenceWithSingleConditionalUpdate() {
         ReminderRepository repository = mock(ReminderRepository.class);
-        ReminderScheduleCalculator calculator = new ReminderScheduleCalculator();
         ReminderScheduleService service = new ReminderScheduleService(
                 repository,
-                calculator
+                new ReminderScheduleCalculator()
         );
-        User user = new User();
-        Task task = new Task();
+        Instant startsAt = Instant.parse("2026-11-10T18:00:00Z");
 
-        task.setId("task1");
-        task.setStartsAt(Instant.parse("2026-11-10T18:00:00Z"));
-        Reminder existingReminder = new Reminder();
-        existingReminder.setStatus(ReminderStatus.PENDING);
-        Mockito.when(repository.findByTask_IdAndOccurrenceStartsAt(
-                task.getId(),
-                task.getStartsAt()
-        )).thenReturn(Optional.of(existingReminder));
-        service.cancelPendingReminder(task.getId(), task.getStartsAt());
-        assertEquals(ReminderStatus.CANCELED, existingReminder.getStatus());
-        verify(repository).save(existingReminder);
+        service.cancelReminder("task1", startsAt);
+
+        verify(repository).cancelActiveByTaskIdAndOccurrence(eq("task1"), eq(startsAt), any(Instant.class));
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void ignoresCancellationWithoutOccurrence() {
+        ReminderRepository repository = mock(ReminderRepository.class);
+        ReminderScheduleService service = new ReminderScheduleService(
+                repository,
+                new ReminderScheduleCalculator()
+        );
+
+        service.cancelReminder("task1", null);
+
+        verifyNoInteractions(repository);
     }
 
     @Test
@@ -128,22 +131,11 @@ public class ReminderScheduleServiceTest {
 
         Instant previousStartsAt = Instant.parse("2026-11-10T18:00:00Z");
         Instant currentStartsAt = Instant.parse("2026-11-10T19:00:00Z");
-        Instant previousScheduledAt = Instant.parse("2026-11-10T17:15:00Z");
 
         Task task = new Task();
         task.setId("task1");
         task.setStartsAt(currentStartsAt);
         task.setReminderMinutesBefore(45);
-
-        Reminder existingReminder = new Reminder();
-        existingReminder.setTask(task);
-        existingReminder.setOccurrenceStartsAt(previousStartsAt);
-        existingReminder.setScheduledAt(previousScheduledAt);
-
-        Mockito.when(repository.findByTask_IdAndOccurrenceStartsAt(
-                task.getId(),
-                previousStartsAt
-        )).thenReturn(Optional.of(existingReminder));
 
         Mockito.when(repository.findByTask_IdAndOccurrenceStartsAt(
                 task.getId(),
@@ -152,16 +144,11 @@ public class ReminderScheduleServiceTest {
 
         service.synchronizeAfterTaskUpdate(task, previousStartsAt);
 
+        verify(repository).cancelActiveByTaskIdAndOccurrence(eq("task1"), eq(previousStartsAt), any(Instant.class));
+
         ArgumentCaptor<Reminder> captor = ArgumentCaptor.forClass(Reminder.class);
-        verify(repository, times(2)).save(captor.capture());
-
-        List<Reminder> savedReminders = captor.getAllValues();
-        Reminder canceledReminder = savedReminders.get(0);
-        Reminder newReminder = savedReminders.get(1);
-
-        assertSame(existingReminder, canceledReminder);
-        assertEquals(ReminderStatus.CANCELED, canceledReminder.getStatus());
-        assertEquals(previousScheduledAt, canceledReminder.getScheduledAt());
+        verify(repository).save(captor.capture());
+        Reminder newReminder = captor.getValue();
 
         assertSame(task, newReminder.getTask());
         assertEquals(ReminderStatus.PENDING, newReminder.getStatus());
@@ -170,6 +157,26 @@ public class ReminderScheduleServiceTest {
                 Instant.parse("2026-11-10T18:15:00Z"),
                 newReminder.getScheduledAt()
         );
+    }
+
+    @Test
+    void cancelsReminderWhenReminderIsDisabled() {
+        ReminderRepository repository = mock(ReminderRepository.class);
+        ReminderScheduleService service = new ReminderScheduleService(
+                repository,
+                new ReminderScheduleCalculator()
+        );
+        Instant startsAt = Instant.parse("2026-11-10T18:00:00Z");
+
+        Task task = new Task();
+        task.setId("task1");
+        task.setStartsAt(startsAt);
+        task.setReminderMinutesBefore(null);
+
+        service.synchronizeAfterTaskUpdate(task, startsAt);
+
+        verify(repository).cancelActiveByTaskIdAndOccurrence(eq("task1"), eq(startsAt), any(Instant.class));
+        verify(repository, never()).save(any());
     }
 
     @Test
@@ -243,7 +250,7 @@ public class ReminderScheduleServiceTest {
     }
 
     @Test
-    void cancelsPendingReminderWhenTaskIsCompleted() {
+    void cancelsReminderWhenTaskIsCompleted() {
         ReminderRepository repository = mock(ReminderRepository.class);
         ReminderScheduleService service = new ReminderScheduleService(
                 repository,
@@ -257,27 +264,22 @@ public class ReminderScheduleServiceTest {
         task.setReminderMinutesBefore(45);
         task.setCompletedAt(Instant.parse("2026-11-10T12:00:00Z"));
 
-        Reminder pendingReminder = new Reminder();
-        pendingReminder.setStatus(ReminderStatus.PENDING);
-        when(repository.findByTask_IdAndOccurrenceStartsAt(task.getId(), startsAt))
-                .thenReturn(Optional.of(pendingReminder));
-
         service.synchronizeAfterTaskUpdate(task, startsAt);
 
-        assertEquals(ReminderStatus.CANCELED, pendingReminder.getStatus());
-        verify(repository, times(1)).save(pendingReminder);
+        verify(repository, times(2)).cancelActiveByTaskIdAndOccurrence(eq("task1"), eq(startsAt), any(Instant.class));
+        verify(repository, never()).save(any());
     }
 
     @Test
-    void cancelsAllPendingRemindersOfDeletedTask() {
+    void cancelsUndeliveredRemindersOfDeletedTask() {
         ReminderRepository repository = mock(ReminderRepository.class);
         ReminderScheduleService service = new ReminderScheduleService(
                 repository,
                 new ReminderScheduleCalculator()
         );
 
-        service.cancelPendingRemindersForTask("task1");
+        service.cancelRemindersForTask("task1");
 
-        verify(repository).cancelPendingByTaskId(eq("task1"), any(Instant.class));
+        verify(repository).cancelActiveByTaskId(eq("task1"), any(Instant.class));
     }
 }

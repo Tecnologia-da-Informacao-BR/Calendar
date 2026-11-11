@@ -555,7 +555,7 @@ class TaskServiceTest {
 
         taskService.deleteTask(TASK_ID);
 
-        verify(reminderScheduleService).cancelPendingRemindersForTask(TASK_ID);
+        verify(reminderScheduleService).cancelRemindersForTask(TASK_ID);
         verify(repository).delete(existingTask);
     }
 
@@ -570,7 +570,7 @@ class TaskServiceTest {
         assertThrows(AccessDeniedException.class, () -> taskService.deleteTask(TASK_ID));
 
         verify(repository, never()).delete(any());
-        verify(reminderScheduleService, never()).cancelPendingRemindersForTask(any());
+        verify(reminderScheduleService, never()).cancelRemindersForTask(any());
     }
 
     @Test
