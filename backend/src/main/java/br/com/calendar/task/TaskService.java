@@ -226,12 +226,14 @@ public class TaskService {
         };
     }
 
+    @Transactional
     public void deleteTask(String id) {
         repository.findByIdAndDeletedAtIsNull(id).ifPresent(task -> {
             checkOwnership(task);
+            reminderScheduleService.cancelPendingRemindersForTask(task.getId());
             repository.delete(task);
         });
-    }  
+    }
     /**
     * Returns the task history for the currently authenticated user,
     * mapped to TaskResponseDTO. Delegates the actual filtering/ordering
@@ -249,8 +251,10 @@ public class TaskService {
     /**
      * PATCH semantics: fields omitted from the request are left unchanged.
      */
+    @Transactional
     public TaskResponseDTO updateTask(TaskRequestDTO request, String taskId) {
         Task existingTask = findOwnedTask(taskId);
+        Instant previousStartsAt = existingTask.getStartsAt();
         User currentUser = currentUser();
 
         if (request.getCategoryId() != null) {
@@ -261,15 +265,19 @@ public class TaskService {
 
         validateTaskDates(existingTask);
 
-        return taskMapper.toResponse(repository.save(existingTask));
+        Task savedTask = repository.save(existingTask);
+        reminderScheduleService.synchronizeAfterTaskUpdate(savedTask, previousStartsAt);
+        return taskMapper.toResponse(savedTask);
     }
 
     /**
      * PUT semantics: full replacement. Fields omitted from the request clear
      * the corresponding value on the task, including the category.
      */
+    @Transactional
     public TaskResponseDTO replaceTask(TaskRequestDTO request, String taskId) {
         Task existingTask = findOwnedTask(taskId);
+        Instant previousStartsAt = existingTask.getStartsAt();
         User currentUser = currentUser();
 
         Category category = request.getCategoryId() != null
@@ -281,7 +289,9 @@ public class TaskService {
 
         validateTaskDates(existingTask);
 
-        return taskMapper.toResponse(repository.save(existingTask));
+        Task savedTask = repository.save(existingTask);
+        reminderScheduleService.synchronizeAfterTaskUpdate(savedTask, previousStartsAt);
+        return taskMapper.toResponse(savedTask);
     }
 
     private Task findOwnedTask(String taskId) {

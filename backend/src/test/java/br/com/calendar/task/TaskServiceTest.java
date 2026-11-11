@@ -547,6 +547,7 @@ class TaskServiceTest {
     @Test
     void deleteTask_Success_WhenOwner() {
         Task existingTask = new Task();
+        existingTask.setId(TASK_ID);
         existingTask.setUser(userWithId(USER_ID));
 
         mockAuthenticatedUser(userWithId(USER_ID));
@@ -554,6 +555,7 @@ class TaskServiceTest {
 
         taskService.deleteTask(TASK_ID);
 
+        verify(reminderScheduleService).cancelPendingRemindersForTask(TASK_ID);
         verify(repository).delete(existingTask);
     }
 
@@ -568,6 +570,7 @@ class TaskServiceTest {
         assertThrows(AccessDeniedException.class, () -> taskService.deleteTask(TASK_ID));
 
         verify(repository, never()).delete(any());
+        verify(reminderScheduleService, never()).cancelPendingRemindersForTask(any());
     }
 
     @Test

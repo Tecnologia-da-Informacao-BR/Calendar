@@ -1,6 +1,10 @@
 package br.com.calendar.task;
 
 import br.com.calendar.auth.JwtUtil;
+import br.com.calendar.reminder.Reminder;
+import br.com.calendar.reminder.ReminderRepository;
+import br.com.calendar.reminder.ReminderStatus;
+import com.jayway.jsonpath.JsonPath;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,11 +20,15 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
 
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -47,6 +55,9 @@ class TaskReminderIntegrationTest {
 
     @Autowired
     private EntityManager entityManager;
+
+    @Autowired
+    private ReminderRepository reminderRepository;
 
     private String token;
 
@@ -112,6 +123,74 @@ class TaskReminderIntegrationTest {
         );
 
         assertEquals("PENDING", reminderStatus);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"PATCH", "PUT"})
+    void updateTask_ReschedulesReminderWhenStartChanges(String method) throws Exception {
+        Instant previousStartsAt = Instant.parse("2026-11-10T18:00:00Z");
+        Instant currentStartsAt = Instant.parse("2026-11-10T19:00:00Z");
+
+        MvcResult creationResult = mockMvc.perform(post("/tasks")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "title": "Rescheduled meeting",
+                                    "startsAt": "2026-11-10T18:00:00Z",
+                                    "reminderMinutesBefore": 45
+                                }
+                                """))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        String taskId = JsonPath.read(
+                creationResult.getResponse().getContentAsString(),
+                "$.id"
+        );
+
+        String updatePayload;
+        if ("PUT".equals(method)) {
+            updatePayload = """
+                    {
+                        "title": "Rescheduled meeting",
+                        "startsAt": "2026-11-10T19:00:00Z",
+                        "reminderMinutesBefore": 45
+                    }
+                    """;
+        } else {
+            updatePayload = """
+                    {"startsAt": "2026-11-10T19:00:00Z"}
+                    """;
+        }
+
+        mockMvc.perform(request(HttpMethod.valueOf(method), "/tasks/{id}", taskId)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updatePayload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.reminderMinutesBefore").value(45));
+
+        entityManager.flush();
+        entityManager.clear();
+
+        Reminder previousReminder = reminderRepository
+                .findByTask_IdAndOccurrenceStartsAt(taskId, previousStartsAt)
+                .orElseThrow();
+        Reminder currentReminder = reminderRepository
+                .findByTask_IdAndOccurrenceStartsAt(taskId, currentStartsAt)
+                .orElseThrow();
+
+        assertEquals(ReminderStatus.CANCELED, previousReminder.getStatus());
+        assertEquals(
+                Instant.parse("2026-11-10T17:15:00Z"),
+                previousReminder.getScheduledAt()
+        );
+        assertEquals(ReminderStatus.PENDING, currentReminder.getStatus());
+        assertEquals(
+                Instant.parse("2026-11-10T18:15:00Z"),
+                currentReminder.getScheduledAt()
+        );
     }
 
     @Test
@@ -310,6 +389,166 @@ class TaskReminderIntegrationTest {
                 Integer.class,
                 USER_ID
         ));
+    }
+
+    @Test
+    void deleteTask_CancelsPendingReminder() throws Exception {
+        String taskId = createTaskWithReminder("Deleted meeting", 45);
+
+        mockMvc.perform(delete("/tasks/{id}", taskId)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNoContent());
+
+        entityManager.flush();
+        entityManager.clear();
+
+        Reminder reminder = reminderRepository
+                .findByTask_IdAndOccurrenceStartsAt(taskId, Instant.parse("2026-11-10T18:00:00Z"))
+                .orElseThrow();
+
+        assertEquals(ReminderStatus.CANCELED, reminder.getStatus());
+        assertEquals(Instant.parse("2026-11-10T17:15:00Z"), reminder.getScheduledAt());
+        assertEquals(1, jdbc.queryForObject(
+                "SELECT COUNT(*) FROM task WHERE id = ? AND deleted_at IS NOT NULL",
+                Integer.class,
+                taskId
+        ));
+    }
+
+    @Test
+    void deleteTask_KeepsProcessedReminderHistory() throws Exception {
+        String taskId = createTaskWithReminder("Already reminded meeting", 45);
+        jdbc.update("UPDATE reminder SET status = 'READY' WHERE task_id = ?", taskId);
+
+        mockMvc.perform(delete("/tasks/{id}", taskId)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isNoContent());
+
+        entityManager.flush();
+        entityManager.clear();
+
+        assertEquals("READY", jdbc.queryForObject(
+                "SELECT status FROM reminder WHERE task_id = ?",
+                String.class,
+                taskId
+        ));
+    }
+
+    @Test
+    void deleteTask_FromAnotherUser_KeepsReminderPending() throws Exception {
+        String taskId = createTaskWithReminder("Protected meeting", 45);
+
+        String otherUserId = "reminder-intruder";
+        jdbc.update(
+                "INSERT INTO users (id, name, email_confirmed) VALUES (?, ?, false)",
+                otherUserId,
+                "Intruder"
+        );
+
+        mockMvc.perform(delete("/tasks/{id}", taskId)
+                        .header("Authorization", "Bearer " + jwtUtil.generateToken(otherUserId)))
+                .andExpect(status().isForbidden());
+
+        entityManager.flush();
+        entityManager.clear();
+
+        assertEquals("PENDING", jdbc.queryForObject(
+                "SELECT status FROM reminder WHERE task_id = ?",
+                String.class,
+                taskId
+        ));
+        assertEquals(USER_ID, jdbc.queryForObject(
+                "SELECT user_id FROM reminder WHERE task_id = ?",
+                String.class,
+                taskId
+        ));
+    }
+
+    @Test
+    void patchTask_CompletingTask_CancelsPendingReminder() throws Exception {
+        String taskId = createTaskWithReminder("Completed meeting", 45);
+
+        mockMvc.perform(patch("/tasks/{id}", taskId)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"completedAt": "2026-11-10T12:00:00Z"}
+                                """))
+                .andExpect(status().isOk());
+
+        entityManager.flush();
+        entityManager.clear();
+
+        assertEquals("CANCELED", jdbc.queryForObject(
+                "SELECT status FROM reminder WHERE task_id = ?",
+                String.class,
+                taskId
+        ));
+    }
+
+    @Test
+    void patchTask_DisableThenEnableReminder_ReactivatesSameOccurrence() throws Exception {
+        String taskId = createTaskWithReminder("Toggled meeting", 45);
+
+        mockMvc.perform(patch("/tasks/{id}", taskId)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"reminderMinutesBefore": null}
+                                """))
+                .andExpect(status().isOk());
+
+        entityManager.flush();
+        entityManager.clear();
+
+        assertEquals("CANCELED", jdbc.queryForObject(
+                "SELECT status FROM reminder WHERE task_id = ?",
+                String.class,
+                taskId
+        ));
+
+        mockMvc.perform(patch("/tasks/{id}", taskId)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"reminderMinutesBefore": 30}
+                                """))
+                .andExpect(status().isOk());
+
+        entityManager.flush();
+        entityManager.clear();
+
+        Reminder reminder = reminderRepository
+                .findByTask_IdAndOccurrenceStartsAt(taskId, Instant.parse("2026-11-10T18:00:00Z"))
+                .orElseThrow();
+
+        assertEquals(ReminderStatus.PENDING, reminder.getStatus());
+        assertEquals(Instant.parse("2026-11-10T17:30:00Z"), reminder.getScheduledAt());
+        assertEquals(1, jdbc.queryForObject(
+                "SELECT COUNT(*) FROM reminder WHERE task_id = ?",
+                Integer.class,
+                taskId
+        ));
+    }
+
+    private String createTaskWithReminder(String title, int reminderMinutesBefore) throws Exception {
+        MvcResult result = mockMvc.perform(post("/tasks")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "title": "%s",
+                                    "startsAt": "2026-11-10T18:00:00Z",
+                                    "reminderMinutesBefore": %d
+                                }
+                                """.formatted(title, reminderMinutesBefore)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        entityManager.flush();
+        entityManager.clear();
+
+        return JsonPath.read(result.getResponse().getContentAsString(), "$.id");
     }
 
     private void insertTaskWithReminder() {
