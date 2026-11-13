@@ -1,17 +1,15 @@
 package br.com.calendar.task;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.YearMonth;
-import java.time.ZoneOffset;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-
+import br.com.calendar.category.Category;
+import br.com.calendar.category.CategoryService;
+import br.com.calendar.common.exception.ResourceNotFoundException;
 import br.com.calendar.reminder.ReminderScheduleService;
+import br.com.calendar.task.dto.TaskMonthResponseDTO;
+import br.com.calendar.task.dto.TaskRequestDTO;
+import br.com.calendar.task.dto.TaskResponseDTO;
+import br.com.calendar.user.User;
+import br.com.calendar.user.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -20,15 +18,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import br.com.calendar.category.Category;
-import br.com.calendar.category.CategoryService;
-import br.com.calendar.common.exception.ResourceNotFoundException;
-import br.com.calendar.task.dto.TaskMonthResponseDTO;
-import br.com.calendar.task.dto.TaskRequestDTO;
-import br.com.calendar.task.dto.TaskResponseDTO;
-import br.com.calendar.user.User;
-import br.com.calendar.user.UserRepository;
-import lombok.RequiredArgsConstructor;
+import java.time.*;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -65,9 +60,27 @@ public class TaskService {
         String userId = currentUser().getId();
         var startOfDay = date.atStartOfDay().toInstant(ZoneOffset.UTC);
         var endOfDay = date.atTime(LocalTime.MAX).toInstant(ZoneOffset.UTC);
-        return repository.findActiveTasksForDay(userId, startOfDay, endOfDay).stream()
-                .map(taskMapper::toResponse)
-                .toList();
+        List<Task> tasks = repository.findActiveTasksForDay(userId, startOfDay, endOfDay);
+        List<TaskResponseDTO> result = new ArrayList<>();
+
+        for (Task task : tasks) {
+            if (task.getRepeatInterval() == null) {
+                TaskResponseDTO response = taskMapper.toResponse(task);
+                result.add(response);
+                continue;
+            }
+            List<Occurrence> occurrences = expandOccurrences(task, startOfDay, endOfDay);
+
+            for (Occurrence occurrence : occurrences){
+                TaskResponseDTO response = taskMapper.toResponse(task);
+                response.setId(occurrence.id());
+                response.setStartsAt(occurrence.startsAt());
+                response.setEndsAt(occurrence.endsAt());
+                result.add(response);
+            }
+        }
+        result.sort(Comparator.comparing(TaskResponseDTO::getStartsAt));
+        return result;
     }
 
     @Transactional(readOnly = true)
@@ -106,7 +119,7 @@ public class TaskService {
      * to the current user, excluding soft-deleted tasks — recurring tasks
      * (repeatInterval set) are expanded into their occurrences within the
      * month rather than returned as a single row.
-     *
+     * <p>
      * Recurrence model (RFC 5545-style, the same one Google
      * Calendar/Outlook/etc. use, simplified to the two columns this table
      * has): repeatInterval is the cadence unit (daily/weekly/monthly/yearly),
@@ -234,20 +247,22 @@ public class TaskService {
             repository.delete(task);
         });
     }
+
     /**
-    * Returns the task history for the currently authenticated user,
-    * mapped to TaskResponseDTO. Delegates the actual filtering/ordering
-    * logic to the repository query (findTaskHistory).
-    */
+     * Returns the task history for the currently authenticated user,
+     * mapped to TaskResponseDTO. Delegates the actual filtering/ordering
+     * logic to the repository query (findTaskHistory).
+     */
     public Page<TaskResponseDTO> getTaskHistory(Pageable pageable) {
         String userId = currentUser().getId();
-         // "now" is computed here instead of using the database's
+        // "now" is computed here instead of using the database's
         // CURRENT_TIMESTAMP so the reference instant is explicit and
         // testable (can be swapped for a fixed Clock later if needed).
         Instant now = Instant.now();
         return repository.findTaskHistory(userId, now, pageable)
-            .map(taskMapper::toResponse);
-}
+                .map(taskMapper::toResponse);
+    }
+
     /**
      * PATCH semantics: fields omitted from the request are left unchanged.
      */
@@ -343,7 +358,6 @@ public class TaskService {
             throw new IllegalArgumentException("Task start time must be before its end time.");
         }
     }
-
 
 
 }
