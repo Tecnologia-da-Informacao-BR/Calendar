@@ -50,6 +50,50 @@ class TaskOccurrencesTest {
     }
 
     @Test
+    void monthlyStrideFromEndOfMonthKeepsClampingFromTheOriginalStart() {
+        Task task = task("2026-01-31T10:00:00Z", "monthly", 2);
+
+        assertEquals(List.of(
+                        Instant.parse("2026-03-31T10:00:00Z"),
+                        Instant.parse("2026-05-31T10:00:00Z"),
+                        Instant.parse("2026-07-31T10:00:00Z")),
+                starts(task, "2026-02-01T00:00:00Z", "2026-08-31T23:59:59Z"));
+    }
+
+    @Test
+    void rangeBoundariesOnClampedDatesIncludeTheOccurrence() {
+        Task monthly = task("2026-01-31T10:00:00Z", "monthly", null);
+        Task yearly = task("2024-02-29T10:00:00Z", "yearly", null);
+
+        // Range starting or ending exactly on the clamped occurrence.
+        assertEquals(List.of(Instant.parse("2026-02-28T10:00:00Z")),
+                starts(monthly, "2026-02-28T10:00:00Z", "2026-03-30T23:59:59Z"));
+        assertEquals(List.of(Instant.parse("2026-02-28T10:00:00Z")),
+                starts(monthly, "2026-02-01T00:00:00Z", "2026-02-28T10:00:00Z"));
+        assertEquals(List.of(Instant.parse("2028-02-29T10:00:00Z")),
+                starts(yearly, "2028-02-29T10:00:00Z", "2028-02-29T10:00:00Z"));
+    }
+
+    @Test
+    void isOccurrenceAcceptsClampedAndLeapDatesAndRejectsTheirNeighbours() {
+        Task monthly = task("2026-01-31T10:00:00Z", "monthly", null);
+        Task yearly = task("2024-02-29T10:00:00Z", "yearly", null);
+
+        // A false negative here would cancel a valid reminder (ReminderEligibility).
+        assertTrue(TaskOccurrences.isOccurrence(monthly, Instant.parse("2026-03-31T10:00:00Z")));
+        assertTrue(TaskOccurrences.isOccurrence(monthly, Instant.parse("2027-02-28T10:00:00Z")));
+        assertTrue(TaskOccurrences.isOccurrence(monthly, Instant.parse("2028-02-29T10:00:00Z")));
+        assertFalse(TaskOccurrences.isOccurrence(monthly, Instant.parse("2026-03-28T10:00:00Z")));
+        assertFalse(TaskOccurrences.isOccurrence(monthly, Instant.parse("2026-03-01T10:00:00Z")));
+
+        assertTrue(TaskOccurrences.isOccurrence(yearly, Instant.parse("2025-02-28T10:00:00Z")));
+        assertTrue(TaskOccurrences.isOccurrence(yearly, Instant.parse("2028-02-29T10:00:00Z")));
+        assertTrue(TaskOccurrences.isOccurrence(yearly, Instant.parse("2100-02-28T10:00:00Z")));
+        assertFalse(TaskOccurrences.isOccurrence(yearly, Instant.parse("2025-03-01T10:00:00Z")));
+        assertFalse(TaskOccurrences.isOccurrence(yearly, Instant.parse("2028-02-28T10:00:00Z")));
+    }
+
+    @Test
     void longRunningSeriesIsReachedWithoutWalkingItsHistory() {
         Task task = task("1990-01-01T15:00:00Z", "daily", 3);
 

@@ -105,6 +105,19 @@ class RecurringReminderScheduleTest {
         assertEquals(instants(expected.split(",")), occurrences());
     }
 
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+            "2026-01-31T10:00:00Z | monthly | P120D  | 2026-11-30T10:00:00Z,2026-12-31T10:00:00Z,2027-01-31T10:00:00Z,2027-02-28T10:00:00Z",
+            "2027-01-31T10:00:00Z | monthly | P140D  | 2027-01-31T10:00:00Z,2027-02-28T10:00:00Z,2027-03-31T10:00:00Z",
+            "2024-02-29T10:00:00Z | yearly  | P1200D | 2027-02-28T10:00:00Z,2028-02-29T10:00:00Z,2029-02-28T10:00:00Z"
+    })
+    void endOfMonthAndLeapDaySeriesGetAReminderForEveryOccurrence(String start, String interval, String window,
+                                                                  String expected) {
+        service(Duration.parse(window)).scheduleRecurring(task(start, interval, null, 0), NOW);
+
+        assertEquals(instants(expected.split(",")), occurrences());
+    }
+
     @Test
     void offsetPullsInOccurrencesThatStartAfterTheWindowButAreRemindedWithinIt() {
         // Window ends 2026-11-15T10:00. A two-day offset means the occurrence
