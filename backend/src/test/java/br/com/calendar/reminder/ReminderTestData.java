@@ -45,6 +45,23 @@ final class ReminderTestData {
         );
     }
 
+    void insertRecurringTask(String taskId, String userId, Instant startsAt,
+                             String repeatInterval, Integer repeat, Integer reminderMinutesBefore) {
+        jdbc.update(
+                """
+                INSERT INTO task (id, user_id, title, starts_at, repeat_interval, repeat, reminder_minutes_before)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                taskId,
+                userId,
+                "Recurring " + taskId,
+                timestamp(startsAt),
+                repeatInterval,
+                repeat,
+                reminderMinutesBefore
+        );
+    }
+
     void insertReminder(String reminderId, String taskId, String userId,
                         Instant occurrenceStartsAt, Instant scheduledAt, ReminderStatus status) {
         insertReminder(reminderId, taskId, userId, occurrenceStartsAt, scheduledAt, status, null, null);
@@ -77,6 +94,25 @@ final class ReminderTestData {
 
     String claimTokenOf(String reminderId) {
         return jdbc.queryForObject("SELECT claim_token FROM reminder WHERE id = ?", String.class, reminderId);
+    }
+
+    String statusOf(String taskId, Instant occurrenceStartsAt) {
+        return jdbc.queryForObject(
+                "SELECT status FROM reminder WHERE task_id = ? AND occurrence_starts_at = ?",
+                String.class, taskId, timestamp(occurrenceStartsAt));
+    }
+
+    Instant scheduledAtOf(String taskId, Instant occurrenceStartsAt) {
+        return jdbc.queryForObject(
+                "SELECT scheduled_at FROM reminder WHERE task_id = ? AND occurrence_starts_at = ?",
+                Timestamp.class, taskId, timestamp(occurrenceStartsAt)).toInstant();
+    }
+
+    /** Occurrence starts of the task's reminders, in order. */
+    java.util.List<Instant> occurrencesOf(String taskId) {
+        return jdbc.queryForList(
+                "SELECT occurrence_starts_at FROM reminder WHERE task_id = ? ORDER BY occurrence_starts_at",
+                Timestamp.class, taskId).stream().map(Timestamp::toInstant).toList();
     }
 
     private static Timestamp timestamp(Instant instant) {

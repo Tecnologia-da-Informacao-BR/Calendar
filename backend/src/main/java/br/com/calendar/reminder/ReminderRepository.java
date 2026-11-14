@@ -59,6 +59,54 @@ public interface ReminderRepository extends JpaRepository<Reminder, String> {
     );
 
     /**
+     * Creates the PENDING reminder of one occurrence, idempotently: the unique
+     * key (task, occurrence) turns a second insert of the same occurrence,
+     * from a repeated run or a concurrent instance, into an update. A PENDING
+     * row gets the new reminder time (offset changed) and a CANCELED row is
+     * reused when its occurrence is part of the series again. PROCESSING,
+     * READY and SKIPPED rows are left untouched.
+     *
+     * @return 1 when a row was created or changed, 0 otherwise
+     */
+    @Modifying(flushAutomatically = true)
+    @Query(value = """
+            INSERT INTO reminder
+                (id, task_id, user_id, occurrence_starts_at, scheduled_at, status, version, created_at, updated_at)
+            VALUES (:id, :taskId, :userId, :occurrenceStartsAt, :scheduledAt, 'PENDING', 0, :now, :now)
+            ON CONFLICT ON CONSTRAINT uk_reminder_task_occurrence DO UPDATE
+            SET status = 'PENDING',
+                scheduled_at = EXCLUDED.scheduled_at,
+                version = reminder.version + 1,
+                updated_at = EXCLUDED.updated_at
+            WHERE reminder.status = 'CANCELED'
+               OR (reminder.status = 'PENDING' AND reminder.scheduled_at <> EXCLUDED.scheduled_at)
+            """, nativeQuery = true)
+    int upsertPending(
+            @Param("id") String id,
+            @Param("taskId") String taskId,
+            @Param("userId") String userId,
+            @Param("occurrenceStartsAt") Instant occurrenceStartsAt,
+            @Param("scheduledAt") Instant scheduledAt,
+            @Param("now") Instant now
+    );
+
+    /**
+     * Occurrences after {@code after} whose reminder was not delivered yet.
+     * Used to cancel the ones that left the series when the task changes.
+     */
+    @Query("""
+            SELECT r.occurrenceStartsAt
+            FROM Reminder r
+            WHERE r.task.id = :taskId
+              AND r.occurrenceStartsAt > :after
+              AND r.status IN (
+                  br.com.calendar.reminder.ReminderStatus.PENDING,
+                  br.com.calendar.reminder.ReminderStatus.PROCESSING,
+                  br.com.calendar.reminder.ReminderStatus.READY)
+            """)
+    List<Instant> findActiveOccurrencesAfter(@Param("taskId") String taskId, @Param("after") Instant after);
+
+    /**
      * Atomically claims up to {@code limit} due PENDING reminders for one
      * scheduler run. {@code FOR UPDATE SKIP LOCKED} makes concurrent instances
      * skip rows another instance is claiming, so a reminder is never claimed
@@ -141,13 +189,19 @@ public interface ReminderRepository extends JpaRepository<Reminder, String> {
             """, nativeQuery = true)
     int releaseExpiredClaims(@Param("now") Instant now);
 
+    /**
+     * Recurring occurrences can't be matched against the series in JPQL; a
+     * READY reminder of an occurrence that left the series is canceled when
+     * the task is updated, and {@link ReminderDeliveryService#revalidate}
+     * checks the series again right before delivery.
+     */
     @Query("""
             SELECT r
             FROM Reminder r
             JOIN FETCH r.task t
             WHERE r.status = br.com.calendar.reminder.ReminderStatus.READY
               AND r.occurrenceStartsAt > :now
-              AND r.occurrenceStartsAt = t.startsAt
+              AND (r.occurrenceStartsAt = t.startsAt OR t.repeatInterval IS NOT NULL)
               AND t.reminderMinutesBefore IS NOT NULL
               AND t.deletedAt IS NULL
               AND t.completedAt IS NULL

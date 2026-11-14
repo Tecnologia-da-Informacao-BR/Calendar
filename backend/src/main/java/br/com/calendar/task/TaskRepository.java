@@ -86,6 +86,27 @@ Page<Task> findTaskHistory(@Param("userId") String userId, @Param("now") Instant
 
 
 /**
+ * One page of the recurring tasks that need reminders, locked for the
+ * reminder generation transaction. Keyset pagination by id keeps each page
+ * cheap however many tasks exist. SKIP LOCKED makes concurrent scheduler
+ * instances split the pages and skips a task that a user is updating right
+ * now — that update reschedules the task's reminders itself.
+ */
+@Query(value = """
+        SELECT * FROM task
+        WHERE id > :afterId
+          AND repeat_interval IS NOT NULL
+          AND reminder_minutes_before IS NOT NULL
+          AND starts_at IS NOT NULL
+          AND deleted_at IS NULL
+          AND completed_at IS NULL
+        ORDER BY id
+        LIMIT :limit
+        FOR UPDATE SKIP LOCKED
+        """, nativeQuery = true)
+List<Task> lockRecurringTasksWithReminder(@Param("afterId") String afterId, @Param("limit") int limit);
+
+/**
  * Checks if there are any tasks associated with a given category that have not been soft-deleted.
  * @param categoryId
  * @return boolean: true if there are tasks associated with the category, false otherwise
