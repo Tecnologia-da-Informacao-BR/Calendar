@@ -1,6 +1,7 @@
 package br.com.calendar.reminder;
 
 import br.com.calendar.task.Task;
+import br.com.calendar.task.TaskOccurrences;
 
 import java.time.Instant;
 
@@ -16,14 +17,14 @@ final class ReminderEligibility {
 
     /**
      * @return CANCELED when the task was deleted or completed, its reminder was
-     * disabled, or its start time changed (the reminder belongs to an outdated
-     * occurrence); SKIPPED when the event already started (the event start is
+     * disabled, or its start time or recurrence changed (the reminder belongs
+     * to an occurrence that is no longer part of the task); SKIPPED when the event already started (the event start is
      * the cutoff, not the original reminder time); READY otherwise.
      */
     static ReminderStatus resolve(Reminder reminder, Task task, Instant now) {
         boolean taskFinished = task.getDeletedAt() != null || task.getCompletedAt() != null;
         boolean reminderDisabled = task.getReminderMinutesBefore() == null;
-        boolean outdatedOccurrence = !reminder.getOccurrenceStartsAt().equals(task.getStartsAt());
+        boolean outdatedOccurrence = !TaskOccurrences.isOccurrence(task, reminder.getOccurrenceStartsAt());
 
         if (taskFinished || reminderDisabled || outdatedOccurrence) {
             return ReminderStatus.CANCELED;
