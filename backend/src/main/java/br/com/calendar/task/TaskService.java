@@ -1,15 +1,16 @@
 package br.com.calendar.task;
 
-import br.com.calendar.category.Category;
-import br.com.calendar.category.CategoryService;
-import br.com.calendar.common.exception.ResourceNotFoundException;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.YearMonth;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+
 import br.com.calendar.reminder.ReminderScheduleService;
-import br.com.calendar.task.dto.TaskMonthResponseDTO;
-import br.com.calendar.task.dto.TaskRequestDTO;
-import br.com.calendar.task.dto.TaskResponseDTO;
-import br.com.calendar.user.User;
-import br.com.calendar.user.UserRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -18,12 +19,15 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.*;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
+import br.com.calendar.category.Category;
+import br.com.calendar.category.CategoryService;
+import br.com.calendar.common.exception.ResourceNotFoundException;
+import br.com.calendar.task.dto.TaskMonthResponseDTO;
+import br.com.calendar.task.dto.TaskRequestDTO;
+import br.com.calendar.task.dto.TaskResponseDTO;
+import br.com.calendar.user.User;
+import br.com.calendar.user.UserRepository;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -60,18 +64,14 @@ public class TaskService {
         String userId = currentUser().getId();
         var startOfDay = date.atStartOfDay().toInstant(ZoneOffset.UTC);
         var endOfDay = date.atTime(LocalTime.MAX).toInstant(ZoneOffset.UTC);
-        List<Task> tasks = repository.findActiveTasksForDay(userId, startOfDay, endOfDay);
         List<TaskResponseDTO> result = new ArrayList<>();
 
-        for (Task task : tasks) {
+        for (Task task : repository.findActiveTasksForDay(userId, startOfDay, endOfDay)) {
             if (task.getRepeatInterval() == null) {
-                TaskResponseDTO response = taskMapper.toResponse(task);
-                result.add(response);
+                result.add(taskMapper.toResponse(task));
                 continue;
             }
-            List<Occurrence> occurrences = expandOccurrences(task, startOfDay, endOfDay);
-
-            for (Occurrence occurrence : occurrences){
+            for (TaskOccurrences.Occurrence occurrence : TaskOccurrences.between(task, startOfDay, endOfDay)) {
                 TaskResponseDTO response = taskMapper.toResponse(task);
                 response.setId(occurrence.id());
                 response.setStartsAt(occurrence.startsAt());
@@ -118,14 +118,8 @@ public class TaskService {
      * Tasks whose starts_at or ends_at falls within the given month, scoped
      * to the current user, excluding soft-deleted tasks — recurring tasks
      * (repeatInterval set) are expanded into their occurrences within the
-     * month rather than returned as a single row.
-     * <p>
-     * Recurrence model (RFC 5545-style, the same one Google
-     * Calendar/Outlook/etc. use, simplified to the two columns this table
-     * has): repeatInterval is the cadence unit (daily/weekly/monthly/yearly),
-     * repeat is the stride ("every N <repeatInterval>s", defaulting to 1).
-     * There's no stored end condition, so a recurring task repeats
-     * indefinitely.
+     * month rather than returned as a single row (see {@link TaskOccurrences},
+     * shared with the reminder scheduler).
      */
     public List<TaskMonthResponseDTO> getTasksForMonth(int month, int year) {
         if (month < 1 || month > 12) {
@@ -144,7 +138,7 @@ public class TaskService {
                 continue;
             }
 
-            for (Occurrence occurrence : expandOccurrences(task, monthStart, monthEnd)) {
+            for (TaskOccurrences.Occurrence occurrence : TaskOccurrences.between(task, monthStart, monthEnd)) {
                 result.add(taskMapper.toMonthResponse(task, occurrence.id(), occurrence.startsAt(), occurrence.endsAt()));
             }
         }
@@ -152,91 +146,6 @@ public class TaskService {
         return result.stream()
                 .sorted((a, b) -> a.getStartsAt().compareTo(b.getStartsAt()))
                 .toList();
-    }
-
-    private record Occurrence(String id, Instant startsAt, Instant endsAt) {
-    }
-
-    // Safety net for how many occurrences a single month can legitimately
-    // contain (daily with stride 1 tops out at 31) — not a substitute for
-    // correctly locating where iteration should start, which
-    // fastForwardOnOrBefore handles regardless of how old the task is.
-    private static final int MAX_OCCURRENCES_PER_TASK = 1000;
-
-    private List<Occurrence> expandOccurrences(Task task, Instant monthStart, Instant monthEnd) {
-        ChronoUnit unit = chronoUnit(task.getRepeatInterval());
-        if (unit == null) {
-            // Unrecognized repeatInterval: treat as a single, non-repeating
-            // occurrence rather than guessing a cadence.
-            return overlapsMonth(task.getStartsAt(), task.getEndsAt(), monthStart, monthEnd)
-                    ? List.of(new Occurrence(task.getId() + "_" + task.getStartsAt(), task.getStartsAt(), task.getEndsAt()))
-                    : List.of();
-        }
-
-        Duration eventDuration = task.getEndsAt() != null
-                ? Duration.between(task.getStartsAt(), task.getEndsAt())
-                : null;
-        int stride = task.getRepeat() != null && task.getRepeat() > 0 ? task.getRepeat() : 1;
-
-        List<Occurrence> occurrences = new ArrayList<>();
-        // Jump straight to the last occurrence at/before the start of the
-        // month instead of walking one stride at a time from the task's
-        // original startsAt — otherwise a long-lived daily/weekly task hits
-        // MAX_OCCURRENCES_PER_TASK before ever reaching a month that's years
-        // out, and silently disappears from it.
-        Instant cursor = fastForwardOnOrBefore(task.getStartsAt(), unit, stride, monthStart);
-
-        for (int i = 0; i < MAX_OCCURRENCES_PER_TASK && !cursor.isAfter(monthEnd); i++) {
-            Instant occursAt = cursor;
-            Instant occursUntil = eventDuration != null ? occursAt.plus(eventDuration) : null;
-
-            if (overlapsMonth(occursAt, occursUntil, monthStart, monthEnd)) {
-                occurrences.add(new Occurrence(task.getId() + "_" + occursAt, occursAt, occursUntil));
-            }
-
-            cursor = cursor.atZone(ZoneOffset.UTC).plus(stride, unit).toInstant();
-        }
-
-        return occurrences;
-    }
-
-    /**
-     * Does an event running from `start` (to `end`, or a single instant if
-     * `end` is null) overlap the [monthStart, monthEnd] range at all? Covers
-     * starting in the month, ending in the month, and fully spanning it.
-     */
-    private static boolean overlapsMonth(Instant start, Instant end, Instant monthStart, Instant monthEnd) {
-        if (start.isAfter(monthEnd)) {
-            return false;
-        }
-        Instant effectiveEnd = end != null ? end : start;
-        return !effectiveEnd.isBefore(monthStart);
-    }
-
-    /**
-     * The largest value of the form `start + k*stride*unit` (k >= 0) that is
-     * <= target, computed directly instead of by iterating — `unit.between`
-     * gives the exact number of whole units between two instants, so this is
-     * O(1) regardless of how far apart `start` and `target` are.
-     */
-    private static Instant fastForwardOnOrBefore(Instant start, ChronoUnit unit, int stride, Instant target) {
-        if (!start.isBefore(target)) {
-            return start;
-        }
-
-        long unitsBetween = unit.between(start.atZone(ZoneOffset.UTC), target.atZone(ZoneOffset.UTC));
-        long strides = unitsBetween / stride;
-        return start.atZone(ZoneOffset.UTC).plus(strides * stride, unit).toInstant();
-    }
-
-    private static ChronoUnit chronoUnit(String repeatInterval) {
-        return switch (repeatInterval.toLowerCase()) {
-            case "daily" -> ChronoUnit.DAYS;
-            case "weekly" -> ChronoUnit.WEEKS;
-            case "monthly" -> ChronoUnit.MONTHS;
-            case "yearly" -> ChronoUnit.YEARS;
-            default -> null;
-        };
     }
 
     @Transactional
@@ -247,22 +156,20 @@ public class TaskService {
             repository.delete(task);
         });
     }
-
     /**
-     * Returns the task history for the currently authenticated user,
-     * mapped to TaskResponseDTO. Delegates the actual filtering/ordering
-     * logic to the repository query (findTaskHistory).
-     */
+    * Returns the task history for the currently authenticated user,
+    * mapped to TaskResponseDTO. Delegates the actual filtering/ordering
+    * logic to the repository query (findTaskHistory).
+    */
     public Page<TaskResponseDTO> getTaskHistory(Pageable pageable) {
         String userId = currentUser().getId();
-        // "now" is computed here instead of using the database's
+         // "now" is computed here instead of using the database's
         // CURRENT_TIMESTAMP so the reference instant is explicit and
         // testable (can be swapped for a fixed Clock later if needed).
         Instant now = Instant.now();
         return repository.findTaskHistory(userId, now, pageable)
-                .map(taskMapper::toResponse);
-    }
-
+            .map(taskMapper::toResponse);
+}
     /**
      * PATCH semantics: fields omitted from the request are left unchanged.
      */
@@ -358,6 +265,7 @@ public class TaskService {
             throw new IllegalArgumentException("Task start time must be before its end time.");
         }
     }
+
 
 
 }

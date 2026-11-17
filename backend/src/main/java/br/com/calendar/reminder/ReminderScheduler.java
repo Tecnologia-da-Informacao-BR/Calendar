@@ -30,10 +30,33 @@ public class ReminderScheduler {
     private static final Logger log = LoggerFactory.getLogger(ReminderScheduler.class);
 
     private final ReminderProcessor reminderProcessor;
+    private final RecurringReminderGenerator recurringReminderGenerator;
     private final Clock clock = Clock.systemUTC();
 
-    public ReminderScheduler(ReminderProcessor reminderProcessor) {
+    public ReminderScheduler(ReminderProcessor reminderProcessor, RecurringReminderGenerator recurringReminderGenerator) {
         this.reminderProcessor = reminderProcessor;
+        this.recurringReminderGenerator = recurringReminderGenerator;
+    }
+
+    /**
+     * Moves the scheduling window of recurring tasks forward (issue #223).
+     * Runs less often than the processor: the window is much longer than the
+     * interval, so each run only adds the occurrences that just entered it.
+     */
+    @Scheduled(
+            initialDelayString = "${calendar.reminders.scheduler.initial-delay:PT10S}",
+            fixedDelayString = "${calendar.reminders.recurring.refresh-interval:PT1H}"
+    )
+    public void scheduleRecurringReminders() {
+        try {
+            int changed = recurringReminderGenerator.generate(Instant.now(clock));
+            if (changed > 0) {
+                log.info("Recurring reminder run finished: {} reminders created or updated", changed);
+            }
+        } catch (RuntimeException exception) {
+            // Keep the job alive: the next run regenerates the same window.
+            log.error("Recurring reminder run failed", exception);
+        }
     }
 
     @Scheduled(

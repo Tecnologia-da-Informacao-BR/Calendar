@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
 
@@ -21,7 +22,8 @@ public class ReminderScheduleServiceTest {
         ReminderScheduleCalculator calculator = new ReminderScheduleCalculator();
         ReminderScheduleService service = new ReminderScheduleService(
                 repository,
-                calculator
+                calculator,
+                Duration.ofDays(7)
         );
         User user = new User();
         Task task = new Task();
@@ -51,7 +53,8 @@ public class ReminderScheduleServiceTest {
         ReminderScheduleCalculator calculator = new ReminderScheduleCalculator();
         ReminderScheduleService service = new ReminderScheduleService(
                 repository,
-                calculator
+                calculator,
+                Duration.ofDays(7)
         );
         User user = new User();
         Task task = new Task();
@@ -68,7 +71,8 @@ public class ReminderScheduleServiceTest {
         ReminderScheduleCalculator calculator = new ReminderScheduleCalculator();
         ReminderScheduleService service = new ReminderScheduleService(
                 repository,
-                calculator
+                calculator,
+                Duration.ofDays(7)
         );
         User user = new User();
         Task task = new Task();
@@ -98,7 +102,8 @@ public class ReminderScheduleServiceTest {
         ReminderRepository repository = mock(ReminderRepository.class);
         ReminderScheduleService service = new ReminderScheduleService(
                 repository,
-                new ReminderScheduleCalculator()
+                new ReminderScheduleCalculator(),
+                Duration.ofDays(7)
         );
         Instant startsAt = Instant.parse("2026-11-10T18:00:00Z");
 
@@ -113,7 +118,8 @@ public class ReminderScheduleServiceTest {
         ReminderRepository repository = mock(ReminderRepository.class);
         ReminderScheduleService service = new ReminderScheduleService(
                 repository,
-                new ReminderScheduleCalculator()
+                new ReminderScheduleCalculator(),
+                Duration.ofDays(7)
         );
 
         service.cancelReminder("task1", null);
@@ -126,7 +132,8 @@ public class ReminderScheduleServiceTest {
         ReminderRepository repository = mock(ReminderRepository.class);
         ReminderScheduleService service = new ReminderScheduleService(
                 repository,
-                new ReminderScheduleCalculator()
+                new ReminderScheduleCalculator(),
+                Duration.ofDays(7)
         );
 
         Instant previousStartsAt = Instant.parse("2026-11-10T18:00:00Z");
@@ -164,7 +171,8 @@ public class ReminderScheduleServiceTest {
         ReminderRepository repository = mock(ReminderRepository.class);
         ReminderScheduleService service = new ReminderScheduleService(
                 repository,
-                new ReminderScheduleCalculator()
+                new ReminderScheduleCalculator(),
+                Duration.ofDays(7)
         );
         Instant startsAt = Instant.parse("2026-11-10T18:00:00Z");
 
@@ -184,7 +192,8 @@ public class ReminderScheduleServiceTest {
         ReminderRepository repository = mock(ReminderRepository.class);
         ReminderScheduleService service = new ReminderScheduleService(
                 repository,
-                new ReminderScheduleCalculator()
+                new ReminderScheduleCalculator(),
+                Duration.ofDays(7)
         );
 
         Task task = new Task();
@@ -210,7 +219,8 @@ public class ReminderScheduleServiceTest {
         ReminderRepository repository = mock(ReminderRepository.class);
         ReminderScheduleService service = new ReminderScheduleService(
                 repository,
-                new ReminderScheduleCalculator()
+                new ReminderScheduleCalculator(),
+                Duration.ofDays(7)
         );
 
         Task task = new Task();
@@ -236,7 +246,8 @@ public class ReminderScheduleServiceTest {
         ReminderRepository repository = mock(ReminderRepository.class);
         ReminderScheduleService service = new ReminderScheduleService(
                 repository,
-                new ReminderScheduleCalculator()
+                new ReminderScheduleCalculator(),
+                Duration.ofDays(7)
         );
 
         Task task = new Task();
@@ -254,7 +265,8 @@ public class ReminderScheduleServiceTest {
         ReminderRepository repository = mock(ReminderRepository.class);
         ReminderScheduleService service = new ReminderScheduleService(
                 repository,
-                new ReminderScheduleCalculator()
+                new ReminderScheduleCalculator(),
+                Duration.ofDays(7)
         );
 
         Instant startsAt = Instant.parse("2026-11-10T18:00:00Z");
@@ -275,7 +287,8 @@ public class ReminderScheduleServiceTest {
         ReminderRepository repository = mock(ReminderRepository.class);
         ReminderScheduleService service = new ReminderScheduleService(
                 repository,
-                new ReminderScheduleCalculator()
+                new ReminderScheduleCalculator(),
+                Duration.ofDays(7)
         );
 
         service.cancelRemindersForTask("task1");
