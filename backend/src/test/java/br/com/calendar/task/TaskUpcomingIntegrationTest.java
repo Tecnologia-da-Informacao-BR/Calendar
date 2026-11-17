@@ -247,14 +247,87 @@ class TaskUpcomingIntegrationTest {
     }
 
     @Test
-    void usesPersistedStartsAtWithoutExpandingRecurrences() throws Exception {
-        insertTask("past-recurring", USER_ID, referenceTime.minus(1, ChronoUnit.DAYS));
-        insertTask("future-recurring", USER_ID, referenceTime.plusSeconds(3600));
-        jdbc.update("UPDATE task SET repeat_interval = 'daily', repeat = 1 WHERE user_id = ?", USER_ID);
+    void includesUpcomingOccurrencesOfRecurringTasks() throws Exception {
+        // First occurrence was yesterday: the next ones are today and tomorrow.
+        Instant firstStart = referenceTime.minus(1, ChronoUnit.DAYS).plusSeconds(3600);
+        insertTask("daily-series", USER_ID, firstStart);
+        makeRecurring("daily-series", "daily", 1);
+
+        mockMvc.perform(get("/tasks/upcoming").header("Authorization", "Bearer " + token).param("limit", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].taskId", contains("daily-series", "daily-series")))
+                .andExpect(jsonPath("$[*].startsAt", contains(
+                        referenceTime.plusSeconds(3600).toString(),
+                        referenceTime.plus(1, ChronoUnit.DAYS).plusSeconds(3600).toString())))
+                .andExpect(jsonPath("$[0].id").value("daily-series_" + referenceTime.plusSeconds(3600)));
+    }
+
+    @Test
+    void mergesRecurringOccurrencesWithTasksChronologicallyAndRespectsLimit() throws Exception {
+        insertTask("single-in-2h", USER_ID, referenceTime.plusSeconds(7200));
+        insertTask("single-in-2d", USER_ID, referenceTime.plus(2, ChronoUnit.DAYS));
+        insertTask("daily-at-1h", USER_ID, referenceTime.minus(3, ChronoUnit.DAYS).plusSeconds(3600));
+        makeRecurring("daily-at-1h", "daily", 1);
+
+        mockMvc.perform(get("/tasks/upcoming").header("Authorization", "Bearer " + token).param("limit", "3"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(3))
+                .andExpect(jsonPath("$[*].taskId", contains("daily-at-1h", "single-in-2h", "daily-at-1h")));
+    }
+
+    @Test
+    void recurringOccurrencesRespectStrideAndKeepDuration() throws Exception {
+        Instant firstStart = referenceTime.minus(7, ChronoUnit.DAYS).plusSeconds(3600);
+        insertTask("biweekly", USER_ID, firstStart);
+        makeRecurring("biweekly", "weekly", 2);
+        jdbc.update("UPDATE task SET ends_at = starts_at + INTERVAL '30 minutes' WHERE id = ?", "biweekly");
+
+        Instant next = firstStart.plus(14, ChronoUnit.DAYS);
+        mockMvc.perform(get("/tasks/upcoming").header("Authorization", "Bearer " + token).param("limit", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].startsAt").value(next.toString()))
+                .andExpect(jsonPath("$[0].endsAt").value(next.plus(30, ChronoUnit.MINUTES).toString()));
+    }
+
+    @Test
+    void excludesCompletedAndSoftDeletedRecurringTasks() throws Exception {
+        for (String id : List.of("completed-series", "deleted-series", "active-series")) {
+            insertTask(id, USER_ID, referenceTime.minus(1, ChronoUnit.DAYS).plusSeconds(3600));
+            makeRecurring(id, "daily", 1);
+        }
+        jdbc.update("UPDATE task SET completed_at = CURRENT_TIMESTAMP WHERE id = ?", "completed-series");
+        jdbc.update("UPDATE task SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?", "deleted-series");
+
+        mockMvc.perform(get("/tasks/upcoming").header("Authorization", "Bearer " + token).param("limit", "5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].taskId", contains(
+                        "active-series", "active-series", "active-series", "active-series", "active-series")));
+    }
+
+    @Test
+    void onlyReturnsRecurringOccurrencesOfAuthenticatedUser() throws Exception {
+        insertTask("other-series", OTHER_USER_ID, referenceTime.minus(1, ChronoUnit.DAYS));
+        makeRecurring("other-series", "daily", 1);
+        insertTask("owned", USER_ID, referenceTime.plusSeconds(3600));
 
         upcoming()
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].id", contains("future-recurring")));
+                .andExpect(jsonPath("$[*].taskId", contains("owned")));
+    }
+
+    @Test
+    void hugeLimitWithRecurringTaskStaysBounded() throws Exception {
+        insertTask("daily-series", USER_ID, referenceTime.plusSeconds(3600));
+        makeRecurring("daily-series", "daily", 1);
+
+        mockMvc.perform(get("/tasks/upcoming").header("Authorization", "Bearer " + token)
+                        .param("limit", Integer.toString(Integer.MAX_VALUE)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(998));
+    }
+
+    private void makeRecurring(String id, String repeatInterval, int repeat) {
+        jdbc.update("UPDATE task SET repeat_interval = ?, repeat = ? WHERE id = ?", repeatInterval, repeat, id);
     }
 
     private void insertTask(String id, String userId, Instant startsAt) {

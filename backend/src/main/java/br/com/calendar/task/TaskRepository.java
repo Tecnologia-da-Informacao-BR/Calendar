@@ -28,12 +28,29 @@ public interface TaskRepository extends JpaRepository<Task, String> {
     @Query("""
             SELECT t FROM Task t
             WHERE t.user.id = :userId
+              AND t.repeatInterval IS NULL
               AND t.startsAt >= :now
               AND t.completedAt IS NULL
               AND t.deletedAt IS NULL
             ORDER BY t.startsAt ASC, t.id ASC
             """)
     List<Task> findUpcomingTasks(@Param("userId") String userId, @Param("now") Instant now, Pageable pageable);
+
+    /**
+     * Recurring tasks that can still have upcoming occurrences. Their own
+     * startsAt may be in the past (that is only the first occurrence), so it
+     * is not filtered here; {@link TaskOccurrences#upcoming} picks the
+     * occurrences in the service.
+     */
+    @Query("""
+            SELECT t FROM Task t
+            WHERE t.user.id = :userId
+              AND t.repeatInterval IS NOT NULL
+              AND t.startsAt IS NOT NULL
+              AND t.completedAt IS NULL
+              AND t.deletedAt IS NULL
+            """)
+    List<Task> findActiveRecurringTasks(@Param("userId") String userId);
 
 
     @Query("SELECT t FROM Task t" +

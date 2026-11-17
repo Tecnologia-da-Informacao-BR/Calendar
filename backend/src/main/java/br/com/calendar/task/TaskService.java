@@ -39,6 +39,11 @@ public class TaskService {
     private final UserRepository userRepository;
     private final ReminderScheduleService reminderScheduleService;
 
+    /** Start time first, then id, so ties always come out in the same order. */
+    private static final Comparator<TaskResponseDTO> CHRONOLOGICAL = Comparator
+            .comparing(TaskResponseDTO::getStartsAt, Comparator.nullsLast(Comparator.naturalOrder()))
+            .thenComparing(TaskResponseDTO::getId, Comparator.nullsLast(Comparator.naturalOrder()));
+
     @Transactional
     public TaskResponseDTO createTask(TaskRequestDTO request) {
         validateRequiredFields(request);
@@ -60,6 +65,13 @@ public class TaskService {
         return taskMapper.toResponse(savedTask);
     }
 
+    /**
+     * Tasks that start on the given day (UTC). Recurring tasks are expanded
+     * with {@link TaskOccurrences}, the same algorithm the month view and the
+     * reminder scheduler use, and each occurrence starting on the day becomes
+     * its own entry. Results are in chronological order.
+     */
+    @Transactional(readOnly = true)
     public List<TaskResponseDTO> getTasksForDay(LocalDate date) {
         String userId = currentUser().getId();
         var startOfDay = date.atStartOfDay().toInstant(ZoneOffset.UTC);
@@ -72,14 +84,16 @@ public class TaskService {
                 continue;
             }
             for (TaskOccurrences.Occurrence occurrence : TaskOccurrences.between(task, startOfDay, endOfDay)) {
-                TaskResponseDTO response = taskMapper.toResponse(task);
-                response.setId(occurrence.id());
-                response.setStartsAt(occurrence.startsAt());
-                response.setEndsAt(occurrence.endsAt());
-                result.add(response);
+                // between() also returns an occurrence that started the day
+                // before and is still running; like non-recurring tasks, the
+                // daily view only lists what starts on the day.
+                if (!occurrence.startsAt().isBefore(startOfDay)) {
+                    result.add(taskMapper.toOccurrenceResponse(task, occurrence));
+                }
             }
         }
-        result.sort(Comparator.comparing(TaskResponseDTO::getStartsAt));
+
+        result.sort(CHRONOLOGICAL);
         return result;
     }
 
@@ -97,9 +111,11 @@ public class TaskService {
     }
 
     /**
-     * Returns incomplete, non-deleted tasks whose persisted startsAt is at or
-     * after Instant.now(), comparing absolute instants (UTC). Task.timezone
-     * does not shift this comparison. Recurrences are not expanded.
+     * Returns the next incomplete, non-deleted tasks starting at or after
+     * Instant.now(), comparing absolute instants (UTC); Task.timezone does not
+     * shift this comparison. Recurring tasks contribute their upcoming
+     * occurrences (see {@link TaskOccurrences#upcoming}), merged with the
+     * non-recurring tasks in chronological order and cut to {@code limit}.
      */
     @Transactional(readOnly = true)
     public List<TaskResponseDTO> getUpcomingTasks(int limit) {
@@ -109,8 +125,20 @@ public class TaskService {
 
         String userId = currentUser().getId();
         Instant now = Instant.now();
-        return repository.findUpcomingTasks(userId, now, PageRequest.of(0, limit)).stream()
-                .map(taskMapper::toResponse)
+        List<TaskResponseDTO> result = new ArrayList<>();
+
+        for (Task task : repository.findUpcomingTasks(userId, now, PageRequest.of(0, limit))) {
+            result.add(taskMapper.toResponse(task));
+        }
+        for (Task task : repository.findActiveRecurringTasks(userId)) {
+            for (TaskOccurrences.Occurrence occurrence : TaskOccurrences.upcoming(task, now, limit)) {
+                result.add(taskMapper.toOccurrenceResponse(task, occurrence));
+            }
+        }
+
+        return result.stream()
+                .sorted(CHRONOLOGICAL)
+                .limit(limit)
                 .toList();
     }
 

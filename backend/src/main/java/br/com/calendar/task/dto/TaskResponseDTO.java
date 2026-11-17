@@ -11,7 +11,14 @@ import lombok.Setter;
 @Setter
 @Builder
 public class TaskResponseDTO {
+    /**
+     * For a recurring task this identifies the occurrence ("taskId_startsAt"),
+     * the same id the month view returns; otherwise it is the task id.
+     */
     private String id;
+
+    /** Id of the task itself, to edit or delete it from any view. */
+    private String taskId;
 
     private String title;
 

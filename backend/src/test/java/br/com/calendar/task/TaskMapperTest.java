@@ -223,4 +223,38 @@ class TaskMapperTest {
 
         assertEquals(Integer.valueOf(45), response.getReminderMinutesBefore());
     }
+
+    @Test
+    void toResponse_TaskIdIsTheTasksOwnId() {
+        Task task = new Task();
+        task.setId("task123");
+
+        TaskResponseDTO response = mapper.toResponse(task);
+
+        assertEquals("task123", response.getId());
+        assertEquals("task123", response.getTaskId());
+    }
+
+    @Test
+    void toOccurrenceResponse_UsesOccurrenceIdAndDates_AndKeepsTaskId() {
+        Task task = new Task();
+        task.setId("task123");
+        task.setTitle("Weekly sync");
+        task.setStartsAt(Instant.parse("2026-11-02T15:00:00Z"));
+        task.setEndsAt(Instant.parse("2026-11-02T15:30:00Z"));
+        task.setRepeatInterval("weekly");
+        TaskOccurrences.Occurrence occurrence = new TaskOccurrences.Occurrence(
+                "task123_2026-11-09T15:00:00Z",
+                Instant.parse("2026-11-09T15:00:00Z"),
+                Instant.parse("2026-11-09T15:30:00Z"));
+
+        TaskResponseDTO response = mapper.toOccurrenceResponse(task, occurrence);
+
+        assertEquals("task123_2026-11-09T15:00:00Z", response.getId());
+        assertEquals("task123", response.getTaskId());
+        assertEquals(Instant.parse("2026-11-09T15:00:00Z"), response.getStartsAt());
+        assertEquals(Instant.parse("2026-11-09T15:30:00Z"), response.getEndsAt());
+        assertEquals("Weekly sync", response.getTitle());
+        assertEquals("weekly", response.getRepeatInterval());
+    }
 }
