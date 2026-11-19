@@ -37,20 +37,24 @@ public interface TaskRepository extends JpaRepository<Task, String> {
     List<Task> findUpcomingTasks(@Param("userId") String userId, @Param("now") Instant now, Pageable pageable);
 
     /**
-     * Recurring tasks that can still have upcoming occurrences. Their own
-     * startsAt may be in the past (that is only the first occurrence), so it
-     * is not filtered here; {@link TaskOccurrences#upcoming} picks the
-     * occurrences in the service.
+     * Schedules of the recurring tasks that can still have upcoming
+     * occurrences. Their own startsAt may be in the past (that is only the
+     * first occurrence), so it is not filtered here. Only the five schedule
+     * columns are selected: the service needs the full task just for the
+     * occurrences that end up in the response.
      */
     @Query("""
-            SELECT t FROM Task t
+            SELECT new br.com.calendar.task.RecurringTaskSchedule(
+                t.id, t.startsAt, t.endsAt, t.repeatInterval, t.repeat)
+            FROM Task t
             WHERE t.user.id = :userId
               AND t.repeatInterval IS NOT NULL
               AND t.startsAt IS NOT NULL
               AND t.completedAt IS NULL
               AND t.deletedAt IS NULL
             """)
-    List<Task> findActiveRecurringTasks(@Param("userId") String userId);
+    List<RecurringTaskSchedule> findActiveRecurringSchedules(@Param("userId") String userId);
+
 
 
     @Query("SELECT t FROM Task t" +

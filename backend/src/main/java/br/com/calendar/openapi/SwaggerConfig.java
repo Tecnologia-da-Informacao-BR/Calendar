@@ -1,5 +1,6 @@
 package br.com.calendar.openapi;
 
+import br.com.calendar.task.TaskService;
 import io.swagger.v3.oas.models.*;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.media.Schema;
@@ -88,13 +89,14 @@ public class SwaggerConfig {
                         .addParametersItem(new Parameter()
                                 .name("limit")
                                 .in("query")
-                                .description("Maximum number of results, occurrences included. Must be greater "
-                                        + "than zero; defaults to 20. No business maximum is imposed.")
+                                .description("Maximum number of results, occurrences included. Must be between "
+                                        + "1 and " + TaskService.MAX_UPCOMING_LIMIT + "; defaults to 20.")
                                 .schema(new Schema<Integer>().type("integer").format("int32")
-                                        .minimum(BigDecimal.ONE)._default(20)))
+                                        .minimum(BigDecimal.ONE).maximum(BigDecimal.valueOf(TaskService.MAX_UPCOMING_LIMIT))._default(20)))
                         .responses(new ApiResponses()
                                 .addApiResponse("200", new ApiResponse().description("OK"))
-                                .addApiResponse("400", new ApiResponse().description("Invalid limit"))
+                                .addApiResponse("400", new ApiResponse().description("Invalid limit (must be between 1 and "
+                                        + TaskService.MAX_UPCOMING_LIMIT + ")"))
                                 .addApiResponse("401", new ApiResponse().description("Unauthorized")))));
 
 
