@@ -3,8 +3,11 @@ package br.com.calendar.task;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -25,6 +28,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -542,6 +546,127 @@ class TaskServiceTest {
 
         assertEquals("Limit must be greater than zero.", exception.getMessage());
         verifyNoInteractions(repository, userRepository, taskMapper);
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {101, 1000, Integer.MAX_VALUE})
+    void getUpcomingTasks_LimitAboveMaximum_ThrowsIllegalArgumentException(int limit) {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> taskService.getUpcomingTasks(limit));
+
+        assertEquals("Limit must not exceed 100.", exception.getMessage());
+        verifyNoInteractions(repository, userRepository, taskMapper);
+    }
+
+    @Test
+    void getUpcomingTasks_InterleavesRecurringOccurrencesWithTasksChronologically() {
+        mockAuthenticatedUser(userWithId(USER_ID));
+        Task dailyAtNine = recurringTask("nine", "2100-01-01T09:00:00Z", "daily");
+        Task dailyAtNoon = recurringTask("noon", "2100-01-01T12:00:00Z", "daily");
+        Task single = new Task();
+        single.setId("single");
+        single.setStartsAt(Instant.parse("2100-01-02T10:00:00Z"));
+        when(repository.findUpcomingTasks(eq(USER_ID), any(), any())).thenReturn(List.of(single));
+        when(repository.findActiveRecurringSchedules(USER_ID))
+                .thenReturn(List.of(scheduleOf(dailyAtNoon), scheduleOf(dailyAtNine)));
+        stubFullTaskLoading(List.of(dailyAtNoon, dailyAtNine));
+        when(taskMapper.toResponse(single)).thenReturn(TaskResponseDTO.builder().id("single").build());
+        stubOccurrenceMapping();
+
+        List<String> ids = taskService.getUpcomingTasks(5).stream().map(TaskResponseDTO::getId).toList();
+
+        assertEquals(List.of(
+                "nine_2100-01-01T09:00:00Z",
+                "noon_2100-01-01T12:00:00Z",
+                "nine_2100-01-02T09:00:00Z",
+                "single",
+                "noon_2100-01-02T12:00:00Z"), ids);
+    }
+
+    @Test
+    void getUpcomingTasks_GeneratesOccurrencesOnDemandForManyRecurringTasks() {
+        mockAuthenticatedUser(userWithId(USER_ID));
+        List<Task> recurringTasks = new ArrayList<>();
+        for (int i = 0; i < 2000; i++) {
+            // Task i starts i minutes after the first one, every day.
+            recurringTasks.add(recurringTask("t" + i,
+                    Instant.parse("2100-01-01T00:00:00Z").plus(i, ChronoUnit.MINUTES).toString(), "daily"));
+        }
+        when(repository.findUpcomingTasks(eq(USER_ID), any(), any())).thenReturn(List.of());
+        when(repository.findActiveRecurringSchedules(USER_ID))
+                .thenReturn(recurringTasks.stream().map(TaskServiceTest::scheduleOf).toList());
+        stubFullTaskLoading(recurringTasks);
+        stubOccurrenceMapping();
+
+        List<String> ids = taskService.getUpcomingTasks(3).stream().map(TaskResponseDTO::getId).toList();
+
+        assertEquals(List.of(
+                "t0_2100-01-01T00:00:00Z",
+                "t1_2100-01-01T00:01:00Z",
+                "t2_2100-01-01T00:02:00Z"), ids);
+        // Only the occurrences that made it into the result were mapped,
+        // not `limit` occurrences for each of the 2000 tasks...
+        verify(taskMapper, times(3)).toOccurrenceResponse(any(), any());
+        // ...and only their 3 tasks were loaded completely, in one query.
+        verify(repository).findAllById(Set.of("t0", "t1", "t2"));
+    }
+
+    @Test
+    void getUpcomingTasks_MapsOccurrencesWithTheCompleteTask() {
+        mockAuthenticatedUser(userWithId(USER_ID));
+        Task complete = recurringTask("weekly", "2100-01-04T15:00:00Z", "weekly");
+        complete.setTitle("Weekly sync");
+        complete.setDescription("Full description that the queue never needed");
+        when(repository.findUpcomingTasks(eq(USER_ID), any(), any())).thenReturn(List.of());
+        when(repository.findActiveRecurringSchedules(USER_ID)).thenReturn(List.of(scheduleOf(complete)));
+        when(repository.findAllById(Set.of("weekly"))).thenReturn(List.of(complete));
+        stubOccurrenceMapping();
+
+        taskService.getUpcomingTasks(1);
+
+        ArgumentCaptor<Task> mapped = ArgumentCaptor.forClass(Task.class);
+        verify(taskMapper).toOccurrenceResponse(mapped.capture(), any());
+        assertEquals("Weekly sync", mapped.getValue().getTitle());
+        assertEquals("Full description that the queue never needed", mapped.getValue().getDescription());
+    }
+
+    @Test
+    void getUpcomingTasks_WithoutRecurringResults_DoesNotLoadCompleteTasks() {
+        mockAuthenticatedUser(userWithId(USER_ID));
+        when(repository.findUpcomingTasks(eq(USER_ID), any(), any())).thenReturn(List.of());
+
+        taskService.getUpcomingTasks(5);
+
+        verify(repository, never()).findAllById(any());
+    }
+
+    private static RecurringTaskSchedule scheduleOf(Task task) {
+        return new RecurringTaskSchedule(task.getId(), task.getStartsAt(), task.getEndsAt(),
+                task.getRepeatInterval(), task.getRepeat());
+    }
+
+    private void stubFullTaskLoading(List<Task> tasks) {
+        when(repository.findAllById(any())).thenAnswer(invocation -> {
+            Iterable<String> requested = invocation.getArgument(0);
+            Set<String> ids = new HashSet<>();
+            requested.forEach(ids::add);
+            return tasks.stream().filter(task -> ids.contains(task.getId())).toList();
+        });
+    }
+
+    private static Task recurringTask(String id, String startsAt, String repeatInterval) {
+        Task task = new Task();
+        task.setId(id);
+        task.setStartsAt(Instant.parse(startsAt));
+        task.setRepeatInterval(repeatInterval);
+        return task;
+    }
+
+    private void stubOccurrenceMapping() {
+        when(taskMapper.toOccurrenceResponse(any(), any())).thenAnswer(invocation -> {
+            TaskOccurrences.Occurrence occurrence = invocation.getArgument(1);
+            return TaskResponseDTO.builder().id(occurrence.id()).startsAt(occurrence.startsAt()).build();
+        });
     }
     
     @Test

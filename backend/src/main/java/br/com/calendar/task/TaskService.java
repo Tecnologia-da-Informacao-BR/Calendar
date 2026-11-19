@@ -6,8 +6,15 @@ import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.PriorityQueue;
+import java.util.Set;
 
 import br.com.calendar.reminder.ReminderScheduleService;
 import org.springframework.data.domain.Page;
@@ -38,6 +45,14 @@ public class TaskService {
     private final UserRepository userRepository;
     private final ReminderScheduleService reminderScheduleService;
 
+    /** Largest page the upcoming tasks endpoint accepts (the default is 20). */
+    public static final int MAX_UPCOMING_LIMIT = 100;
+
+    /** Start time first, then id, so ties always come out in the same order. */
+    private static final Comparator<TaskResponseDTO> CHRONOLOGICAL = Comparator
+            .comparing(TaskResponseDTO::getStartsAt, Comparator.nullsLast(Comparator.naturalOrder()))
+            .thenComparing(TaskResponseDTO::getId, Comparator.nullsLast(Comparator.naturalOrder()));
+
     @Transactional
     public TaskResponseDTO createTask(TaskRequestDTO request) {
         validateRequiredFields(request);
@@ -59,13 +74,36 @@ public class TaskService {
         return taskMapper.toResponse(savedTask);
     }
 
+    /**
+     * Tasks that start on the given day (UTC). Recurring tasks are expanded
+     * with {@link TaskOccurrences}, the same algorithm the month view and the
+     * reminder scheduler use, and each occurrence starting on the day becomes
+     * its own entry. Results are in chronological order.
+     */
+    @Transactional(readOnly = true)
     public List<TaskResponseDTO> getTasksForDay(LocalDate date) {
         String userId = currentUser().getId();
         var startOfDay = date.atStartOfDay().toInstant(ZoneOffset.UTC);
         var endOfDay = date.atTime(LocalTime.MAX).toInstant(ZoneOffset.UTC);
-        return repository.findActiveTasksForDay(userId, startOfDay, endOfDay).stream()
-                .map(taskMapper::toResponse)
-                .toList();
+        List<TaskResponseDTO> result = new ArrayList<>();
+
+        for (Task task : repository.findActiveTasksForDay(userId, startOfDay, endOfDay)) {
+            if (task.getRepeatInterval() == null) {
+                result.add(taskMapper.toResponse(task));
+                continue;
+            }
+            for (TaskOccurrences.Occurrence occurrence : TaskOccurrences.between(task, startOfDay, endOfDay)) {
+                // between() also returns an occurrence that started the day
+                // before and is still running; like non-recurring tasks, the
+                // daily view only lists what starts on the day.
+                if (!occurrence.startsAt().isBefore(startOfDay)) {
+                    result.add(taskMapper.toOccurrenceResponse(task, occurrence));
+                }
+            }
+        }
+
+        result.sort(CHRONOLOGICAL);
+        return result;
     }
 
     @Transactional(readOnly = true)
@@ -82,21 +120,115 @@ public class TaskService {
     }
 
     /**
-     * Returns incomplete, non-deleted tasks whose persisted startsAt is at or
-     * after Instant.now(), comparing absolute instants (UTC). Task.timezone
-     * does not shift this comparison. Recurrences are not expanded.
+     * Returns the next incomplete, non-deleted tasks starting at or after
+     * Instant.now(), comparing absolute instants (UTC); Task.timezone does not
+     * shift this comparison. Recurring tasks contribute their upcoming
+     * occurrences, merged with the non-recurring tasks in chronological order.
+     *
+     * <p>Occurrences are generated on demand: every recurring task starts with
+     * only its next occurrence in a priority queue, and a task's following
+     * occurrence is computed only after the previous one made it into the
+     * result. So the work is about {@code limit + number of recurring tasks}
+     * occurrences, instead of {@code limit} occurrences per recurring task.
+     *
+     * <p>To keep memory low, the queue works with the schedule columns of each
+     * recurring task only; the complete tasks are loaded afterwards, in one
+     * query, just for the occurrences that were selected.
      */
     @Transactional(readOnly = true)
     public List<TaskResponseDTO> getUpcomingTasks(int limit) {
         if (limit <= 0) {
             throw new IllegalArgumentException("Limit must be greater than zero.");
         }
+        if (limit > MAX_UPCOMING_LIMIT) {
+            throw new IllegalArgumentException("Limit must not exceed " + MAX_UPCOMING_LIMIT + ".");
+        }
 
         String userId = currentUser().getId();
         Instant now = Instant.now();
-        return repository.findUpcomingTasks(userId, now, PageRequest.of(0, limit)).stream()
-                .map(taskMapper::toResponse)
-                .toList();
+        PriorityQueue<UpcomingCandidate> queue = new PriorityQueue<>(UpcomingCandidate.ORDER);
+
+        for (Task task : repository.findUpcomingTasks(userId, now, PageRequest.of(0, limit))) {
+            queue.add(UpcomingCandidate.single(task));
+        }
+        // Only the schedule columns: enough to order the occurrences.
+        for (RecurringTaskSchedule schedule : repository.findActiveRecurringSchedules(userId)) {
+            nextOccurrence(schedule.toScheduleOnlyTask(), now).ifPresent(queue::add);
+        }
+
+        List<UpcomingCandidate> selected = new ArrayList<>(limit);
+        while (selected.size() < limit && !queue.isEmpty()) {
+            UpcomingCandidate earliest = queue.poll();
+            selected.add(earliest);
+            if (earliest.occurrence() != null) {
+                // Only now is the task's following occurrence needed.
+                Instant afterThisOne = earliest.occurrence().startsAt().plusNanos(1);
+                nextOccurrence(earliest.task(), afterThisOne).ifPresent(queue::add);
+            }
+        }
+
+        Map<String, Task> fullRecurringTasks = loadFullTasks(selected);
+        List<TaskResponseDTO> result = new ArrayList<>(selected.size());
+        for (UpcomingCandidate candidate : selected) {
+            if (candidate.occurrence() == null) {
+                result.add(taskMapper.toResponse(candidate.task()));
+                continue;
+            }
+            Task fullTask = fullRecurringTasks.get(candidate.task().getId());
+            // Null only if the row vanished between the two queries (the
+            // user account was removed); there is nothing left to show.
+            if (fullTask != null) {
+                result.add(taskMapper.toOccurrenceResponse(fullTask, candidate.occurrence()));
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Loads, in a single query, the complete recurring tasks behind the
+     * selected occurrences (at most {@code limit} tasks, usually fewer).
+     */
+    private Map<String, Task> loadFullTasks(List<UpcomingCandidate> selected) {
+        Set<String> ids = new HashSet<>();
+        for (UpcomingCandidate candidate : selected) {
+            if (candidate.occurrence() != null) {
+                ids.add(candidate.task().getId());
+            }
+        }
+        if (ids.isEmpty()) {
+            return Map.of();
+        }
+        Map<String, Task> byId = new HashMap<>();
+        for (Task task : repository.findAllById(ids)) {
+            byId.put(task.getId(), task);
+        }
+        return byId;
+    }
+
+    private static Optional<UpcomingCandidate> nextOccurrence(Task task, Instant from) {
+        return TaskOccurrences.upcoming(task, from, 1).stream()
+                .findFirst()
+                .map(occurrence -> UpcomingCandidate.recurring(task, occurrence));
+    }
+
+    /**
+     * An entry of the upcoming merge: a non-recurring task (occurrence null)
+     * or one occurrence of a recurring task. Ordered like {@link #CHRONOLOGICAL}.
+     */
+    private record UpcomingCandidate(Task task, TaskOccurrences.Occurrence occurrence,
+                                     Instant startsAt, String id) {
+
+        static final Comparator<UpcomingCandidate> ORDER = Comparator
+                .comparing(UpcomingCandidate::startsAt, Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparing(UpcomingCandidate::id, Comparator.nullsLast(Comparator.naturalOrder()));
+
+        static UpcomingCandidate single(Task task) {
+            return new UpcomingCandidate(task, null, task.getStartsAt(), task.getId());
+        }
+
+        static UpcomingCandidate recurring(Task task, TaskOccurrences.Occurrence occurrence) {
+            return new UpcomingCandidate(task, occurrence, occurrence.startsAt(), occurrence.id());
+        }
     }
 
     /**

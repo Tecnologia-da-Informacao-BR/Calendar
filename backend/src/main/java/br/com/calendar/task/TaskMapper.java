@@ -43,6 +43,7 @@ public class TaskMapper {
     public TaskResponseDTO toResponse(Task task) {
         return TaskResponseDTO.builder()
                 .id(task.getId())
+                .taskId(task.getId())
                 .title(task.getTitle())
                 .description(task.getDescription())
                 .timezone(task.getTimezone())
@@ -64,6 +65,19 @@ public class TaskMapper {
                 .priority(task.getPriority())
                 .reminderMinutesBefore(task.getReminderMinutesBefore())
                 .build();
+    }
+
+    /**
+     * Maps one occurrence of a recurring task for the daily and upcoming
+     * views: same fields as {@link #toResponse}, with the occurrence's id and
+     * dates (the same values the month view returns for that occurrence).
+     */
+    public TaskResponseDTO toOccurrenceResponse(Task task, TaskOccurrences.Occurrence occurrence) {
+        TaskResponseDTO response = toResponse(task);
+        response.setId(occurrence.id());
+        response.setStartsAt(occurrence.startsAt());
+        response.setEndsAt(occurrence.endsAt());
+        return response;
     }
 
     /**

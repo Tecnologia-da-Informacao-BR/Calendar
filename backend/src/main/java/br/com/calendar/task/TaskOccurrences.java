@@ -59,7 +59,7 @@ public final class TaskOccurrences {
         Duration eventDuration = task.getEndsAt() != null
                 ? Duration.between(task.getStartsAt(), task.getEndsAt())
                 : null;
-        int stride = task.getRepeat() != null && task.getRepeat() > 0 ? task.getRepeat() : 1;
+        int stride = stride(task);
         ZonedDateTime origin = task.getStartsAt().atZone(ZoneOffset.UTC);
 
         List<Occurrence> occurrences = new ArrayList<>();
@@ -86,6 +86,47 @@ public final class TaskOccurrences {
         }
 
         return occurrences;
+    }
+
+    /**
+     * The next occurrences of a task that start at or after {@code from}, in
+     * chronological order, at most {@code limit} of them (capped by
+     * MAX_OCCURRENCES_PER_TASK). Used by the upcoming tasks query: unlike
+     * {@link #between}, a recurring task has no natural range end here, so the
+     * range is sized to hold exactly enough strides and {@link #between} does
+     * the actual calculation, keeping a single recurrence algorithm.
+     *
+     * <p>A non-recurring task (or one with an unrecognized repeatInterval)
+     * yields its own start if it is not before {@code from}.
+     */
+    public static List<Occurrence> upcoming(Task task, Instant from, int limit) {
+        if (task.getStartsAt() == null || limit <= 0) {
+            return List.of();
+        }
+        if (!isRecurring(task)) {
+            return task.getStartsAt().isBefore(from)
+                    ? List.of()
+                    : List.of(occurrence(task, task.getStartsAt(), task.getEndsAt()));
+        }
+
+        ChronoUnit unit = chronoUnit(task.getRepeatInterval());
+        int stride = stride(task);
+        // Two slots of the per-range safety cap are kept for the slack below.
+        int count = Math.min(limit, MAX_OCCURRENCES_PER_TASK - 2);
+        ZonedDateTime origin = task.getStartsAt().atZone(ZoneOffset.UTC);
+
+        // fastForwardOnOrBefore lands on an occurrence at/before `from`, but
+        // ChronoUnit.between can undercount by one around clamped dates (a
+        // yearly task from Feb 29 counts only 1 year from 2024-02-29 to
+        // 2026-03-01), so one extra stride guarantees `count` occurrences
+        // starting at/after `from` inside the range.
+        long firstUnits = fastForwardOnOrBefore(origin, unit, stride, from);
+        Instant rangeEnd = origin.plus(firstUnits + (long) stride * (count + 1), unit).toInstant();
+
+        return between(task, from, rangeEnd).stream()
+                .filter(occurrence -> !occurrence.startsAt().isBefore(from))
+                .limit(count)
+                .toList();
     }
 
     /**
@@ -134,6 +175,10 @@ public final class TaskOccurrences {
 
         long unitsBetween = unit.between(origin, target.atZone(ZoneOffset.UTC));
         return (unitsBetween / stride) * stride;
+    }
+
+    private static int stride(Task task) {
+        return task.getRepeat() != null && task.getRepeat() > 0 ? task.getRepeat() : 1;
     }
 
     private static ChronoUnit chronoUnit(String repeatInterval) {

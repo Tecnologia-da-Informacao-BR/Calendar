@@ -1,5 +1,6 @@
 package br.com.calendar.openapi;
 
+import br.com.calendar.task.TaskService;
 import io.swagger.v3.oas.models.*;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.media.Schema;
@@ -80,20 +81,22 @@ public class SwaggerConfig {
         paths.addPathItem("/tasks/upcoming", new PathItem().get(
                 createOp("Get upcoming tasks for the authenticated user", "200", "OK")
                         .description("Returns incomplete, non-deleted tasks ordered by startsAt ASC, then id ASC. "
-                                + "The persisted startsAt must be >= Instant.now(), captured once per request. "
-                                + "Dates are compared as absolute instants (UTC); Task.timezone does not alter "
-                                + "the comparison. Recurrences are not expanded. Returns an empty array when "
-                                + "no tasks match.")
+                                + "startsAt must be >= Instant.now(), captured once per request. Recurring tasks "
+                                + "are expanded into their upcoming occurrences (id = taskId_startsAt, taskId = "
+                                + "the task's own id), merged with non-recurring tasks. Dates are compared as "
+                                + "absolute instants (UTC); Task.timezone does not alter the comparison. Returns "
+                                + "an empty array when no tasks match.")
                         .addParametersItem(new Parameter()
                                 .name("limit")
                                 .in("query")
-                                .description("Maximum number of results, applied in the database. Must be greater "
-                                        + "than zero; defaults to 20. No business maximum is imposed.")
+                                .description("Maximum number of results, occurrences included. Must be between "
+                                        + "1 and " + TaskService.MAX_UPCOMING_LIMIT + "; defaults to 20.")
                                 .schema(new Schema<Integer>().type("integer").format("int32")
-                                        .minimum(BigDecimal.ONE)._default(20)))
+                                        .minimum(BigDecimal.ONE).maximum(BigDecimal.valueOf(TaskService.MAX_UPCOMING_LIMIT))._default(20)))
                         .responses(new ApiResponses()
                                 .addApiResponse("200", new ApiResponse().description("OK"))
-                                .addApiResponse("400", new ApiResponse().description("Invalid limit"))
+                                .addApiResponse("400", new ApiResponse().description("Invalid limit (must be between 1 and "
+                                        + TaskService.MAX_UPCOMING_LIMIT + ")"))
                                 .addApiResponse("401", new ApiResponse().description("Unauthorized")))));
 
 

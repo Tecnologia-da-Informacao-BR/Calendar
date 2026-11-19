@@ -126,4 +126,81 @@ class TaskOccurrencesTest {
         assertTrue(TaskOccurrences.isOccurrence(unknown, Instant.parse("2026-11-02T15:00:00Z")));
         assertFalse(TaskOccurrences.isOccurrence(unknown, Instant.parse("2026-11-16T15:00:00Z")));
     }
+
+    private static List<Instant> upcomingStarts(Task task, String from, int limit) {
+        return TaskOccurrences.upcoming(task, Instant.parse(from), limit).stream()
+                .map(TaskOccurrences.Occurrence::startsAt)
+                .toList();
+    }
+
+    @Test
+    void upcomingReturnsNextOccurrencesOfOldRecurringTask() {
+        // Started years ago: only the occurrences from `from` on matter.
+        Task daily = task("2020-03-10T09:00:00Z", "daily", null);
+
+        assertEquals(List.of(
+                        Instant.parse("2026-11-17T09:00:00Z"),
+                        Instant.parse("2026-11-18T09:00:00Z"),
+                        Instant.parse("2026-11-19T09:00:00Z")),
+                upcomingStarts(daily, "2026-11-17T08:00:00Z", 3));
+    }
+
+    @Test
+    void upcomingIncludesOccurrenceStartingExactlyAtFromAndSkipsOngoingOne() {
+        Task daily = task("2026-11-01T09:00:00Z", "daily", null);
+        daily.setEndsAt(Instant.parse("2026-11-01T10:00:00Z"));
+
+        assertEquals(List.of(Instant.parse("2026-11-17T09:00:00Z"), Instant.parse("2026-11-18T09:00:00Z")),
+                upcomingStarts(daily, "2026-11-17T09:00:00Z", 2));
+        // At 09:30 the 17th is already running (it started before `from`).
+        assertEquals(List.of(Instant.parse("2026-11-18T09:00:00Z")),
+                upcomingStarts(daily, "2026-11-17T09:30:00Z", 1));
+    }
+
+    @Test
+    void upcomingRespectsStrideAndKeepsDuration() {
+        Task everyTwoWeeks = task("2026-11-02T15:00:00Z", "weekly", 2);
+        everyTwoWeeks.setEndsAt(Instant.parse("2026-11-02T15:30:00Z"));
+
+        List<TaskOccurrences.Occurrence> next =
+                TaskOccurrences.upcoming(everyTwoWeeks, Instant.parse("2026-11-03T00:00:00Z"), 2);
+
+        assertEquals(List.of(Instant.parse("2026-11-16T15:00:00Z"), Instant.parse("2026-11-30T15:00:00Z")),
+                next.stream().map(TaskOccurrences.Occurrence::startsAt).toList());
+        assertEquals(Instant.parse("2026-11-16T15:30:00Z"), next.get(0).endsAt());
+        assertEquals("t1_2026-11-16T15:00:00Z", next.get(0).id());
+    }
+
+    @Test
+    void upcomingMonthlyAndYearlyAgreeWithBetween() {
+        Task monthly = task("2026-01-31T10:00:00Z", "monthly", null);
+        Task yearly = task("2024-02-29T10:00:00Z", "yearly", null);
+
+        assertEquals(starts(monthly, "2026-02-01T00:00:00Z", "2026-04-30T23:59:59Z"),
+                upcomingStarts(monthly, "2026-02-01T00:00:00Z", 3));
+        assertEquals(List.of(Instant.parse("2027-02-28T10:00:00Z"), Instant.parse("2028-02-29T10:00:00Z")),
+                upcomingStarts(yearly, "2026-03-01T00:00:00Z", 2));
+    }
+
+    @Test
+    void upcomingOfNonRecurringTaskIsItsOwnStartWhenNotPast() {
+        Task single = task("2026-11-20T15:00:00Z", null, null);
+        Task unknown = task("2026-11-20T15:00:00Z", "fortnightly", null);
+
+        assertEquals(List.of(Instant.parse("2026-11-20T15:00:00Z")),
+                upcomingStarts(single, "2026-11-17T00:00:00Z", 5));
+        assertEquals(List.of(Instant.parse("2026-11-20T15:00:00Z")),
+                upcomingStarts(unknown, "2026-11-17T00:00:00Z", 5));
+        assertEquals(List.of(), upcomingStarts(single, "2026-11-21T00:00:00Z", 5));
+    }
+
+    @Test
+    void upcomingWithHugeLimitStaysBounded() {
+        Task daily = task("2026-01-01T09:00:00Z", "daily", null);
+
+        List<Instant> next = upcomingStarts(daily, "2026-11-17T00:00:00Z", Integer.MAX_VALUE);
+
+        assertEquals(998, next.size());
+        assertEquals(Instant.parse("2026-11-17T09:00:00Z"), next.get(0));
+    }
 }

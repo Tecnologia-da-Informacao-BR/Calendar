@@ -28,6 +28,7 @@ public interface TaskRepository extends JpaRepository<Task, String> {
     @Query("""
             SELECT t FROM Task t
             WHERE t.user.id = :userId
+              AND t.repeatInterval IS NULL
               AND t.startsAt >= :now
               AND t.completedAt IS NULL
               AND t.deletedAt IS NULL
@@ -35,9 +36,32 @@ public interface TaskRepository extends JpaRepository<Task, String> {
             """)
     List<Task> findUpcomingTasks(@Param("userId") String userId, @Param("now") Instant now, Pageable pageable);
 
+    /**
+     * Schedules of the recurring tasks that can still have upcoming
+     * occurrences. Their own startsAt may be in the past (that is only the
+     * first occurrence), so it is not filtered here. Only the five schedule
+     * columns are selected: the service needs the full task just for the
+     * occurrences that end up in the response.
+     */
+    @Query("""
+            SELECT new br.com.calendar.task.RecurringTaskSchedule(
+                t.id, t.startsAt, t.endsAt, t.repeatInterval, t.repeat)
+            FROM Task t
+            WHERE t.user.id = :userId
+              AND t.repeatInterval IS NOT NULL
+              AND t.startsAt IS NOT NULL
+              AND t.completedAt IS NULL
+              AND t.deletedAt IS NULL
+            """)
+    List<RecurringTaskSchedule> findActiveRecurringSchedules(@Param("userId") String userId);
+
+
 
     @Query("SELECT t FROM Task t" +
-            " WHERE t.user.id = :userId AND t.deletedAt IS NULL AND t.startsAt BETWEEN :start AND :end" +
+            " WHERE t.user.id = :userId AND t.deletedAt IS NULL AND ( " +
+            "(t.repeatInterval IS NULL AND t.startsAt BETWEEN :start AND :end)" +
+            " OR (t.repeatInterval IS NOT NULL AND t.startsAt <= :end)" +
+            " )" +
             " ORDER BY t.startsAt")
     List<Task> findActiveTasksForDay(@Param("userId") String userId, @Param("start") Instant start, @Param("end") Instant end);
 
